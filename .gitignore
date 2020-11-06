@@ -3,3 +3,6 @@
 
 # Libs
 *.pyc
+
+# venv
+/venv
