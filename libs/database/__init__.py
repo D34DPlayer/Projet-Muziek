@@ -1,4 +1,5 @@
 import sqlite3
+from . import db_queries
 
 
 Connection = sqlite3.Connection
@@ -19,16 +20,31 @@ def execute(con: Connection, query: str, parameters=()) -> sqlite3.Cursor:
 
 
 def validate_tables(con: Connection):
-    if not table_exists(con, 'songs'):
-        execute(con, 'CREATE TABLE songs')
+    if not foreign_keys(con):
+        execute(con, db_queries.foreign_keys_enable)
+
     if not table_exists(con, 'groups'):
-        execute(con, 'CREATE TABLE groups')
+        execute(con, db_queries.groups)
+
+    if not table_exists(con, 'songs'):
+        execute(con, db_queries.songs)
+
     if not table_exists(con, 'playlists'):
-        execute(con, 'CREATE TABLE playlists')
+        execute(con, db_queries.playlists)
+    if not table_exists(con, 'playlistSongs'):
+        execute(con, db_queries.playlistSongs)
+
     if not table_exists(con, 'albums'):
-        execute(con, 'CREATE TABLE albums')
+        execute(con, db_queries.albums)
+    if not table_exists(con, 'albumSongs'):
+        execute(con, db_queries.albumSongs)
 
 
 def table_exists(con: Connection, name: str) -> int:
-    result = execute(con, "SELECT count(name) FROM sqlite_master WHERE type='table' AND name=?;", (name,))
+    result = execute(con, db_queries.table_exists, (name,))
+    return result.fetchone()[0]
+
+
+def foreign_keys(con: Connection) -> int:
+    result = execute(con, db_queries.foreign_keys)
     return result.fetchone()[0]
