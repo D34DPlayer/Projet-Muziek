@@ -25,6 +25,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if 'func' not in args:
+        parser.print_usage()
+        exit()
+
     con = db.connect(args.database)
 
     args.func(con, args)
