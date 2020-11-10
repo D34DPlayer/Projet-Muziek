@@ -1,4 +1,7 @@
+import math
+
 from ..database import DBMuziek
+from . import utils
 from argparse import Namespace
 
 
@@ -71,4 +74,31 @@ def list_album(db: DBMuziek, name: str):
 
 
 def list_playlist(db: DBMuziek, name: str):
-    return True
+    playlist = db.execute('SELECT playlist_id, author FROM playlists WHERE name = ?', (name,)).fetchone()
+    if playlist is None:
+        print(f'The playlist "{name}" does not exists.')
+        return
+
+    playlist_id, author = playlist
+    utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
+
+    songs = db.execute('''
+        SELECT s.name, s.duration, g.name
+        FROM playlistSongs as p
+        LEFT JOIN songs AS s ON s.song_id = p.song_id
+        LEFT JOIN groups AS g ON g.group_id = s.group_id
+        WHERE p.playlist_id = ?
+    ''', (playlist_id,)).fetchall()
+
+    if len(songs) == 0:
+        print('<empty>')
+        return
+
+    length = math.ceil(math.log10(len(songs)))
+    for i, (song, duration, group) in enumerate(songs, 1):
+        if duration is None:
+            duration = '??:??'
+        else:
+            duration = '{}:{}'.format(*divmod(duration, 60))
+
+        print(f'{i:>{length}}. ({duration}) {song} - {group}')
