@@ -1,59 +1,59 @@
-from .. import database as db
+from ..database import DBMuziek
 from argparse import Namespace
 
 
-def cli_add(connection: db.Connection, arguments: Namespace):
+def cli_add(db: DBMuziek, arguments: Namespace):
     if arguments.TYPE == 'song':
-        add_song(connection)
+        add_song(db)
     elif arguments.TYPE == 'album':
-        add_album(connection)
+        add_album(db)
     else:
-        add_group(connection)
+        add_group(db)
 
 
-def cli_list(connection: db.Connection, arguments: Namespace):
+def cli_list(db: DBMuziek, arguments: Namespace):
     if arguments.TYPE == 'song':
-        list_song(connection, arguments.NAME)
+        list_song(db, arguments.NAME)
     elif arguments.TYPE == 'album':
-        list_album(connection, arguments.NAME)
+        list_album(db, arguments.NAME)
     else:
-        list_group(connection, arguments.NAME)
+        list_group(db, arguments.NAME)
 
 
-def cli_playlist(connection: db.Connection, arguments: Namespace):
+def cli_playlist(db: DBMuziek, arguments: Namespace):
     if arguments.song:
-        add_song_playlist(connection, arguments.NAME, arguments.song)
+        add_song_playlist(db, arguments.NAME, arguments.song)
     else:
-        list_playlist(connection, arguments.NAME)
+        list_playlist(db, arguments.NAME)
 
 
-def add_song(con: db.Connection):
+def add_song(db: DBMuziek):
     return True
 
 
-def add_song_playlist(con: db.Connection, name: str, songs):
+    return True
+def add_song_playlist(db: DBMuziek, name: str, songs: list[str]):
+
+
+def add_group(db: DBMuziek):
     return True
 
 
-def add_group(con: db.Connection):
+def add_album(db: DBMuziek):
     return True
 
 
-def add_album(con: db.Connection):
+def list_song(db: DBMuziek, name: str):
     return True
 
 
-def list_song(con: db.Connection, name: str):
+def list_group(db: DBMuziek, name: str):
     return True
 
 
-def list_group(con: db.Connection, name: str):
+def list_album(db: DBMuziek, name: str):
     return True
 
 
-def list_album(con: db.Connection, name: str):
-    return True
-
-
-def list_playlist(con: db.Connection, name: str):
+def list_playlist(db: DBMuziek, name: str):
     return True

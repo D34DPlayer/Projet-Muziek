@@ -1,6 +1,7 @@
 import argparse
-import libs.database as db
 import libs.console_interface as cli
+
+from libs.database import DBMuziek
 
 
 if __name__ == "__main__":
@@ -29,8 +30,5 @@ if __name__ == "__main__":
         parser.print_usage()
         exit()
 
-    con = db.connect(args.database)
-
-    args.func(con, args)
-
-    db.disconnect(con)
+    with DBMuziek(args.database) as db:
+        args.func(db, args)
