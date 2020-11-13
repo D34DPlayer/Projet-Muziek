@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 from ..database import DBMuziek
 from . import utils
@@ -30,31 +31,84 @@ def cli_playlist(db: DBMuziek, arguments: Namespace):
         list_playlist(db, arguments.NAME)
 
 
-def add_song(db: DBMuziek):
-    return True
+def add_song(db: DBMuziek, name: str = None):
+    if not name:
+        name = utils.question("Name")
+
+    update = 'n'
+    if song := db.get_song(name):
+        update = utils.question_choice(f'The song "{name}" already exists. Do you want to update it?', ['y', 'n'])
+
+    link = utils.question("Youtube link")
+
+    genre = utils.question("Genre")
+
+    group = utils.question("Group")
+
+    if not (group_query := db.get_group(group)):
+        reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?', ['y', 'n'])
+        if reply == 'n':
+            return None
+        else:
+            group_id = add_group(db, group)
+    else:
+        group_id = group_query[0]
+
+    if update == 'y':
+        db.update_song(song[0], link, genre, group_id)
+        song_id = song[0]
+    else:
+        song_id = db.create_song(name, link, genre, group_id)
+    db.commit()
+
+    return song_id
 
 
-def add_song_playlist(db: DBMuziek, name: str, songs: list[str]):
-    playlist = db.execute('SELECT playlist_id, author FROM playlists WHERE name = ?', (name,)).fetchone()
+def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
+    playlist = db.get_playlist(name)
     if playlist is None:
         playlist = create_playlist(db, name)
         print(f'The playlist "{name}" has been successfully created.')
 
     playlist_id, author = playlist
     for song_name in songs:
-        song = db.execute('SELECT song_id FROM songs WHERE name = ?', (song_name,)).fetchone()
+        song = db.get_song(song_name)
         if song is None:
             print(f'The song "{song_name}" does not exists. Ignoring ...')
             continue
 
-        db.execute('INSERT OR IGNORE INTO playlistSongs VALUES (?, ?)', (playlist_id, song[0]))
+        db.add_song_playlist(playlist_id, song[0])
         print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
 
     db.commit()
 
 
-def add_group(db: DBMuziek):
-    return True
+def add_group(db: DBMuziek, name: str = None):
+    if not name:
+        name = utils.question("Name")
+
+    update = 'n'
+    if group := db.get_group(name):
+        update = utils.question_choice(f'The group "{name}" already exists. Do you want to update it?', ['y', 'n'])
+
+    members = []
+    while True:
+        if not len(members):
+            member = utils.question(f"Member 1")
+        else:
+            member = utils.question(f"Member {len(members) + 1} ('Done' if there aren't any more)")
+            if member == "Done":
+                break
+        members.append(member)
+
+    if update == 'y':
+        db.update_group(group[0], members)
+        group_id = group[0]
+    else:
+        group_id = db.create_group(name, members)
+    db.commit()
+
+    return group_id
 
 
 def add_album(db: DBMuziek):
@@ -74,7 +128,7 @@ def list_album(db: DBMuziek, name: str):
 
 
 def list_playlist(db: DBMuziek, name: str):
-    playlist = db.execute('SELECT playlist_id, author FROM playlists WHERE name = ?', (name,)).fetchone()
+    playlist = db.get_playlist(name)
     if playlist is None:
         playlist = create_playlist(db, name)
         print(f'The playlist "{name}" has been successfully created.')
@@ -83,13 +137,7 @@ def list_playlist(db: DBMuziek, name: str):
     playlist_id, author = playlist
     utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
 
-    songs = db.execute('''
-        SELECT s.name, s.duration, g.name
-        FROM playlistSongs as p
-        LEFT JOIN songs AS s ON s.song_id = p.song_id
-        LEFT JOIN groups AS g ON g.group_id = s.group_id
-        WHERE p.playlist_id = ?
-    ''', (playlist_id,)).fetchall()
+    songs = db.get_playlist_data(playlist_id)
 
     if len(songs) == 0:
         print('<empty>')
@@ -114,5 +162,7 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
     :return: The playlist's id and its author.
     """
     author = utils.getuser()
-    cursor = db.execute('INSERT INTO playlists(name, author) VALUES (?, ?)', (name, author))
-    return cursor.lastrowid, author
+
+    playlist_id = db.create_playlist(name, author)
+
+    return playlist_id, author

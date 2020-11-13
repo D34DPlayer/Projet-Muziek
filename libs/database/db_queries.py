@@ -4,15 +4,15 @@ foreign_keys = "PRAGMA foreign_keys;"
 
 foreign_keys_enable = "PRAGMA foreign_keys = ON;"
 
-groups = '''
+create_groups = '''
 CREATE TABLE groups (
     group_id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     members TEXT NOT NULL
-)
+);
 '''
 
-songs = '''
+create_songs = '''
 CREATE TABLE songs (
     song_id INTEGER PRIMARY KEY,
     group_id INTEGER NOT NULL,
@@ -22,43 +22,69 @@ CREATE TABLE songs (
     duration NUMERIC,
     dateRelease INTEGER,
     FOREIGN KEY (group_id) REFERENCES GROUPS (group_id)
-)
+);
 '''
 
-albums = '''
+create_albums = '''
 CREATE TABLE albums (
     album_id INTEGER PRIMARY KEY,
     group_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     dateRelease INTEGER,
     FOREIGN KEY (group_id) REFERENCES GROUPS (group_id)
-)
+);
 '''
 
-albumSongs = '''
+create_albumSongs = '''
 CREATE TABLE albumSongs (
     album_id INTEGER,
     song_id INTEGER,
     PRIMARY KEY (album_id, song_id),
     FOREIGN KEY (song_id) REFERENCES SONGS (song_id),
     FOREIGN KEY (album_id) REFERENCES ALBUMS (album_id)
-)
+);
 '''
 
-playlists = '''
+create_playlists = '''
 CREATE TABLE playlists (
     playlist_id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     author TEXT NOT NULL
-)
+);
 '''
 
-playlistSongs = '''
+create_playlistSongs = '''
 CREATE TABLE playlistSongs (
     playlist_id INTEGER,
     song_id INTEGER,
     PRIMARY KEY (playlist_id, song_id),
     FOREIGN KEY (song_id) REFERENCES SONGS (song_id),
     FOREIGN KEY (playlist_id) REFERENCES PLAYLISTS (playlist_id)
-)
+);
 '''
+
+get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
+
+get_song = "SELECT song_id FROM songs WHERE name = ?;"
+
+get_group = "SELECT group_id FROM groups WHERE name = ?;"
+
+add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
+
+get_playlist_data = '''
+SELECT s.name, s.duration, g.name
+    FROM playlistSongs as p
+        LEFT JOIN songs AS s ON s.song_id = p.song_id
+        LEFT JOIN groups AS g ON g.group_id = s.group_id
+    WHERE p.playlist_id = ?;
+'''
+
+create_playlist = "INSERT INTO playlists(name, author) VALUES (?, ?);"
+
+create_group = "INSERT INTO groups(name, members) VALUES (?, ?);"
+
+update_group = "UPDATE groups SET members = ? where group_id = ?;"
+
+create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?);"
+
+update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
