@@ -2,7 +2,11 @@
 /muziek.db
 
 # Libs
-*.pyc
+__pycache__/
 
 # venv
 /venv
+
+# sublime
+*.sublime-project
+*.sublime-workspace
