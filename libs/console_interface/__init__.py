@@ -77,9 +77,10 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
             reply = utils.question_choice(f'The song "{song_name}" doesn\'t. exist yet. Do you want to create it?',
                                           ['y', 'n'])
             if reply == 'n':
-                return None
+                continue
             else:
-                song_id = add_song(db, song_name)
+                if not (song_id := add_song(db, song_name)):
+                    continue
         else:
             song_id = song[0]
 
