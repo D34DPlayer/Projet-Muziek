@@ -74,10 +74,16 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
     for song_name in songs:
         song = db.get_song(song_name)
         if song is None:
-            print(f'The song "{song_name}" does not exists. Ignoring ...')
-            continue
+            reply = utils.question_choice(f'The song "{song_name}" doesn\'t. exist yet. Do you want to create it?',
+                                          ['y', 'n'])
+            if reply == 'n':
+                return None
+            else:
+                song_id = add_song(db, song_name)
+        else:
+            song_id = song[0]
 
-        db.add_song_playlist(playlist_id, song[0])
+        db.add_song_playlist(playlist_id, song_id)
         print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
 
     db.commit()
