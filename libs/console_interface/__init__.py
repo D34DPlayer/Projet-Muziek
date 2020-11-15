@@ -152,12 +152,7 @@ def list_playlist(db: DBMuziek, name: str):
 
     length = math.ceil(math.log10(len(songs)))
     for i, (song, duration, group) in enumerate(songs, 1):
-        if duration is None:
-            duration = '??:??'
-        else:
-            duration = '{}:{}'.format(*divmod(duration, 60))
-
-        print(f'{i:>{length}}. ({duration}) {song} - {group}')
+        print(f'{i:>{length}}. {song} - {group} ({utils.format_duration(duration)})')
 
 
 def create_playlist(db: DBMuziek, name: str) -> (int, str):

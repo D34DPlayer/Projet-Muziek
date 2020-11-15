@@ -35,3 +35,9 @@ def question_choice(name: str, choices: List[str]):
         result = input(f"{name} [{'/'.join(choices)}]:")
     return result
 
+
+def format_duration(duration: int = None):
+    if duration is None:
+        return '??:??'
+
+    return '{}:{}'.format(*divmod(duration, 60))
