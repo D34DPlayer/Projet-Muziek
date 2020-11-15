@@ -58,11 +58,19 @@ class DBMuziek:
         result = self.execute(db_queries.foreign_keys)
         return result.fetchone()[0]
 
+    def count_songs(self, genre: str = None):
+        if genre is None:
+            return self.execute(db_queries.count_songs).fetchone()[0]
+        return self.execute(db_queries.count_songs_genre, (genre,)).fetchone()[0]
+
     def get_playlist(self, name: str):
         return self.execute(db_queries.get_playlist, (name,)).fetchone()
 
     def get_song(self, name: str):
         return self.execute(db_queries.get_song, (name,)).fetchone()
+
+    def get_songs(self, genre: str, offset: int = 0, limit: int = 50):
+        return self.execute(db_queries.get_songs, (genre, limit, offset)).fetchall()
 
     def get_group(self, name: str):
         return self.execute(db_queries.get_group, (name,)).fetchone()

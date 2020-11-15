@@ -101,7 +101,7 @@ def add_group(db: DBMuziek, name: str = None):
     members = []
     while True:
         if not len(members):
-            member = utils.question(f"Member 1")
+            member = utils.question("Member 1")
         else:
             member = utils.question(f"Member {len(members) + 1} ('Done' if there aren't any more)")
             if member == "Done":
@@ -124,6 +124,45 @@ def add_album(db: DBMuziek):
 
 def list_song(db: DBMuziek, name: str):
     return True
+
+
+def list_songs(db: DBMuziek, genre: str, offset: int = 0):
+    songs = db.get_songs(genre, offset=offset, limit=20)
+
+    if len(songs) == 0:
+        print('<empty>')
+        return
+
+    length = math.ceil(math.log10(songs[-1][0]))
+    for sid, name, duration, group in songs:
+        print(f'{sid:>{length}}. {name} - {group} ({utils.format_duration(duration)})')
+
+    count = math.ceil(db.count_songs(genre) / 20)
+    if count > 1:
+        page = int(offset / 20)
+
+        start = min(count + 1, 2) if count < 5 else count
+        pages = [str(i) for i in range(1, start)]
+
+        if count > 5:
+            pages += [str(i) for i in range(count - 2, count + 1)]
+
+        list_pages = (' ' + ' '.join(pages) + ' ').replace(f' {page + 1} ', f' [{page + 1}] ')
+        print(f'Pages:{list_pages}')
+
+        page = 0
+        while page < 1 or page >= count:
+            page = input('Display another page: ').strip()
+
+            if len(page) == 0:
+                return
+
+            if not page.isdecimal():
+                continue
+
+            page = int(page)
+
+        list_songs(db, genre, offset=(page - 1) * 20)
 
 
 def list_group(db: DBMuziek, name: str):

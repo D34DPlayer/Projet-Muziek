@@ -63,9 +63,21 @@ CREATE TABLE playlistSongs (
 );
 '''
 
+count_songs = "SELECT count(*) FROM songs;"
+
+count_songs_genre = "SELECT count(*) FROM songs WHERE genre = ?;"
+
 get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
 
 get_song = "SELECT song_id FROM songs WHERE name = ?;"
+
+get_songs = '''
+SELECT s.song_id, s.name, s.duration, g.name
+    FROM songs as s
+        LEFT JOIN groups as g ON s.group_id = g.group_id
+    WHERE genre = ?
+    LIMIT ? OFFSET ?;
+'''
 
 get_group = "SELECT group_id FROM groups WHERE name = ?;"
 
