@@ -125,10 +125,7 @@ def list_songs(db: DBMuziek, genre: str, offset: int = 0):
             if len(page) == 0:
                 return
 
-            if not page.isdecimal():
-                continue
-
-            page = int(page)
+            page = int(page) if page.isdecimal() else 0
 
         list_songs(db, genre, offset=(page - 1) * 20)
 
