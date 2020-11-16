@@ -102,14 +102,7 @@ def list_song(db: DBMuziek, name: str):
 
 def list_songs(db: DBMuziek, genre: str, offset: int = 0):
     songs = db.get_songs(genre, offset=offset, limit=20)
-
-    if len(songs) == 0:
-        print('<empty>')
-        return
-
-    length = math.ceil(math.log10(songs[-1][0]))
-    for sid, name, duration, group in songs:
-        print(f'{sid:>{length}}. {name} - {group} ({utils.format_duration(duration)})')
+    utils.display_songs(songs)
 
     count = math.ceil(db.count_songs(genre) / 20)
     if count > 1:
@@ -159,14 +152,7 @@ def list_playlist(db: DBMuziek, name: str):
     utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
 
     songs = db.get_playlist_data(playlist_id)
-
-    if len(songs) == 0:
-        print('<empty>')
-        return
-
-    length = math.ceil(math.log10(len(songs)))
-    for i, (song, duration, group) in enumerate(songs, 1):
-        print(f'{i:>{length}}. {song} - {group} ({utils.format_duration(duration)})')
+    utils.display_songs(songs)
 
 
 def create_playlist(db: DBMuziek, name: str) -> (int, str):
