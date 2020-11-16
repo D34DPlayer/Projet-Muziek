@@ -100,3 +100,5 @@ update_group = "UPDATE groups SET members = ? where group_id = ?;"
 create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?);"
 
 update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
+
+search_song = "SELECT song_id, name FROM songs WHERE name LIKE ?;"

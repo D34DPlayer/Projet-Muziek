@@ -165,3 +165,9 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
     playlist_id = db.create_playlist(name, author)
 
     return playlist_id, author
+
+
+def search_song(db: DBMuziek, name: str):
+    songs = db.search_song(f'%{name.lower()}%')
+    utils.print_underline(f'Results for "{name}":')
+    utils.display_songs(songs)

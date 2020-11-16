@@ -95,3 +95,6 @@ class DBMuziek:
 
     def update_song(self, song_id: int, link: str, genre: str, group_id: int):
         return self.execute(db_queries.update_song, (link, genre, group_id, song_id))
+
+    def search_song(self, name: str):
+        return self.execute(db_queries.search_song, (name,)).fetchall()
