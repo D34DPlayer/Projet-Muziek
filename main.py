@@ -1,34 +1,52 @@
-import argparse
-import libs.console_interface as cli
+"""Keep your music organized.
 
+Usage:
+  main.py [-d <PATH>] add (song | group | album)
+  main.py [-d <PATH>] playlist <name> [-s <song>]...
+  main.py [-d <PATH>] list songs <genre>
+  main.py [-d <PATH>] list song  <name>
+  main.py [-d <PATH>] list group <name>
+  main.py [-d <PATH>] list album <name>
+  main.py -h | --help
+  main.py --version
+
+Options:
+  -h --help             Show this screen.
+  -d --database <PATH>  Path to the local storage [default: muziek.db].
+  -s --song <song>      Song to add to the playlist.
+  --version             Show version.
+"""
+
+import docopt
+
+from libs import __version__, console_interface as cli
 from libs.database import DBMuziek
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog='SoundsGood', description="Keep your music organized.")
-    subparsers = parser.add_subparsers(help='Action to perform')
-    parser.add_argument('-d', '--database', help='Path to the local storage', default='./muziek.db')
+    args = docopt.docopt(__doc__, version=__version__)
 
-    parser_add = subparsers.add_parser('add', help='Add something to the local storage')
-    parser_playlist = subparsers.add_parser('playlist', help='Add a song to a playlist')
-    parser_list = subparsers.add_parser('list', help='Add something to the local storage')
+    with DBMuziek(args['--database']) as db:
+        if args['add']:
+            if args['song']:
+                cli.add_song(db)
+            elif args['group']:
+                cli.add_group(db)
+            elif args['album']:
+                cli.add_album(db)
 
-    parser_add.add_argument('TYPE', help='What to add to the local storage', choices=['song', 'group', 'album'])
-    parser_add.set_defaults(func=cli.cli_add)
+        elif args['list']:
+            if args['songs']:
+                cli.list_songs(db, args['<genre>'])
+            elif args['song']:
+                cli.list_song(db, args['<name>'])
+            elif args['group']:
+                cli.list_group(db, args['<name>'])
+            elif args['album']:
+                cli.list_album(db, args['<name>'])
 
-    parser_list.add_argument('TYPE', help='What to see from the local storage', choices=['song', 'group', 'album'])
-    parser_list.add_argument('NAME', help='Name of that type')
-    parser_list.set_defaults(func=cli.cli_list)
-
-    parser_playlist.add_argument('NAME', help='Name of that playlist')
-    parser_playlist.add_argument('-s', '--song', help='Song to add to the playlist', action='append')
-    parser_playlist.set_defaults(func=cli.cli_playlist)
-
-    args = parser.parse_args()
-
-    if 'func' not in args:
-        parser.print_usage()
-        exit()
-
-    with DBMuziek(args.database) as db:
-        args.func(db, args)
+        elif args['playlist']:
+            if len(args['--song']) == 0:
+                cli.list_playlist(db, args['<name>'])
+            else:
+                cli.add_song_playlist(db, args['<name>'], args['--song'])
