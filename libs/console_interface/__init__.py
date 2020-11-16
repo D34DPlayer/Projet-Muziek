@@ -141,17 +141,18 @@ def list_songs(db: DBMuziek, genre: str, offset: int = 0):
     if count > 1:
         page = int(offset / 20)
 
-        start = min(count + 1, 2) if count < 5 else count
+        start = min(count + 1, 2) if count < 5 else count + 1
         pages = [str(i) for i in range(1, start)]
 
         if count > 5:
+            pages.append('...')
             pages += [str(i) for i in range(count - 2, count + 1)]
 
         list_pages = (' ' + ' '.join(pages) + ' ').replace(f' {page + 1} ', f' [{page + 1}] ')
         print(f'Pages:{list_pages}')
 
         page = 0
-        while page < 1 or page >= count:
+        while page < 1 or page > count:
             page = input('Display another page: ').strip()
 
             if len(page) == 0:
