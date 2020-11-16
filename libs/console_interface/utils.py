@@ -40,12 +40,12 @@ def display_songs(songs: List[tuple]):
     else:
         last = max(s[0] for s in songs)
 
-    length = math.ceil(math.log10(last))
+    length = math.floor(math.log10(last)) + 1
     for sid, name, *song in songs:
         text = f'{sid:>{length}}. {name}'
-        if nargs > 2: # duration
+        if nargs > 2:  # duration
             text += f' ({format_duration(song[0])})'
-        if nargs > 3: # group
+        if nargs > 3:  # group
             text += f' - {song[1]}'
 
         print(text)

@@ -1,4 +1,3 @@
-import math
 from typing import List
 
 from ..database import DBMuziek
@@ -104,7 +103,7 @@ def list_songs(db: DBMuziek, genre: str, offset: int = 0):
     songs = db.get_songs(genre, offset=offset, limit=20)
     utils.display_songs(songs)
 
-    count = math.ceil(db.count_songs(genre) / 20)
+    count = db.count_songs(genre) // 20
     if count > 1:
         page = int(offset / 20)
 
