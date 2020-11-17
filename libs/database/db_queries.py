@@ -102,3 +102,12 @@ create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?
 update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
 
 search_song = "SELECT song_id, name FROM songs WHERE name LIKE ?;"
+
+get_album = "SELECT album_id, group_id FROM albums WHERE name = ?;"
+
+create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
+
+add_song_album = "INSERT OR IGNORE INTO albumSongs VALUES (?, ?);"
+
+delete_album_songs = "DELETE FROM albumSongs WHERE album_id = ?;"
+

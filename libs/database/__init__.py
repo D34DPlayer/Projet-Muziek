@@ -58,9 +58,10 @@ class DBMuziek:
         result = self.execute(db_queries.foreign_keys)
         return result.fetchone()[0]
 
-    def count_songs(self, genre: str = None):
-        if genre is None:
+    def count_songs(self, filters: dict = None):
+        if filters is None:
             return self.execute(db_queries.count_songs).fetchone()[0]
+        genre = filters["--genre"]
         return self.execute(db_queries.count_songs_genre, (genre,)).fetchone()[0]
 
     def get_playlist(self, name: str):
@@ -69,11 +70,15 @@ class DBMuziek:
     def get_song(self, name: str):
         return self.execute(db_queries.get_song, (name,)).fetchone()
 
-    def get_songs(self, genre: str, offset: int = 0, limit: int = 50):
+    def get_songs(self, filters: dict, offset: int = 0, limit: int = 50):
+        genre = filters["--genre"]
         return self.execute(db_queries.get_songs, (genre, limit, offset)).fetchall()
 
     def get_group(self, name: str):
         return self.execute(db_queries.get_group, (name,)).fetchone()
+
+    def get_album(self, name: str):
+        return self.execute(db_queries.get_album, (name,)).fetchone()
 
     def add_song_playlist(self, playlist_id: int, song_id: int):
         return self.execute(db_queries.add_song_playlist, (playlist_id, song_id))
@@ -98,3 +103,14 @@ class DBMuziek:
 
     def search_song(self, name: str):
         return self.execute(db_queries.search_song, (name,)).fetchall()
+
+    def create_album(self, name: str, songs: List[int], group_id: int) -> int:
+        album_id = self.execute(db_queries.create_album, (name, group_id)).lastrowid
+        for song_id in songs:
+            self.execute(db_queries.add_song_album, (album_id, song_id))
+        return album_id
+
+    def update_album(self, album_id: int, songs: List[int]):
+        self.execute(db_queries.delete_album_songs, (album_id,))
+        for song_id in songs:
+            self.execute(db_queries.add_song_album, (album_id, song_id))

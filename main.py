@@ -3,8 +3,7 @@
 Usage:
   main.py [-d <PATH>] add (song | group | album)
   main.py [-d <PATH>] playlist <name> [-s <song>]...
-  main.py [-d <PATH>] list songs <genre>
-  main.py [-d <PATH>] list song  <name>
+  main.py [-d <PATH>] list songs [-g <genre>] [-n <name>]
   main.py [-d <PATH>] list group <name>
   main.py [-d <PATH>] list album <name>
   main.py [-d <PATH>] search song <name>
@@ -15,6 +14,8 @@ Options:
   -h --help             Show this screen.
   -d --database <PATH>  Path to the local storage [default: muziek.db].
   -s --song <song>      Song to add to the playlist.
+  -g --genre <genre>    Genre used to filter the songs listed.
+  -n --name <name>      Name of the song to display.
   --version             Show version.
 """
 
@@ -38,9 +39,7 @@ if __name__ == "__main__":
 
         elif args['list']:
             if args['songs']:
-                cli.list_songs(db, args['<genre>'])
-            elif args['song']:
-                cli.list_song(db, args['<name>'])
+                cli.list_songs(db, args)
             elif args['group']:
                 cli.list_group(db, args['<name>'])
             elif args['album']:
