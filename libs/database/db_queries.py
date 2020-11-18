@@ -63,9 +63,11 @@ CREATE TABLE playlistSongs (
 );
 '''
 
-count_songs = "SELECT count(*) FROM songs;"
-
-count_songs_genre = "SELECT count(*) FROM songs WHERE genre = ?;"
+count_songs = '''
+SELECT count(song_id)
+    FROM songs as s
+        LEFT JOIN groups as g ON s.group_id = g.group_id
+'''
 
 get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
 
@@ -75,9 +77,15 @@ get_songs = '''
 SELECT s.song_id, s.name, s.duration, g.name
     FROM songs as s
         LEFT JOIN groups as g ON s.group_id = g.group_id
-    WHERE genre = ?
-    LIMIT ? OFFSET ?;
 '''
+
+append_genre = "genre = ?"
+
+append_name = "s.name LIKE ?"
+
+append_group = "g.name LIKE ?"
+
+paging = "LIMIT ? OFFSET ?"
 
 get_group = "SELECT group_id FROM groups WHERE name = ?;"
 
@@ -101,8 +109,6 @@ create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?
 
 update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
 
-search_song = "SELECT song_id, name FROM songs WHERE name LIKE ?;"
-
 get_album = "SELECT album_id, group_id FROM albums WHERE name = ?;"
 
 create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
@@ -110,4 +116,3 @@ create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
 add_song_album = "INSERT OR IGNORE INTO albumSongs VALUES (?, ?);"
 
 delete_album_songs = "DELETE FROM albumSongs WHERE album_id = ?;"
-

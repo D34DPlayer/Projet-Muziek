@@ -32,7 +32,8 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         group = utils.question("Group")
 
         if not (group_query := db.get_group(group)):
-            reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?', ['y', 'n'])
+            reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?',
+                                          ['y', 'n'])
             if reply == 'n' or not (group_id := add_group(db, group)):
                 return None
         else:
@@ -234,9 +235,3 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
     playlist_id = db.create_playlist(name, author)
 
     return playlist_id, author
-
-
-def search_song(db: DBMuziek, name: str):
-    songs = db.search_song(f'%{name.lower()}%')
-    utils.print_underline(f'Results for "{name}":')
-    utils.display_songs(songs)

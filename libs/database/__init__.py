@@ -4,6 +4,28 @@ from typing import Optional, List
 from . import db_queries
 
 
+def query_append(prefix: str, suffix: str, *args):
+    parameters = []
+    appends = []
+
+    for (query, val) in args:
+        if val:
+            parameters.append(val)
+            appends.append(query)
+
+    appendix = ' AND '.join(appends)
+
+    if appendix:
+        prefix = f'{prefix} WHERE {appendix}'
+    query = f'{prefix} {suffix};'
+
+    return query, parameters
+
+
+def fuzy(string):
+    return f'%{string.lower()}%' if string else None
+
+
 class DBMuziek:
     def __init__(self, path: str):
         self._connection: Optional[sqlite3.Connection] = None
@@ -58,11 +80,13 @@ class DBMuziek:
         result = self.execute(db_queries.foreign_keys)
         return result.fetchone()[0]
 
-    def count_songs(self, filters: dict = None):
-        if filters is None:
-            return self.execute(db_queries.count_songs).fetchone()[0]
-        genre = filters["--genre"]
-        return self.execute(db_queries.count_songs_genre, (genre,)).fetchone()[0]
+    def count_songs(self, filters: dict):
+        genre = (db_queries.append_genre, filters["--genre"])
+        name = (db_queries.append_name, fuzy(filters["--name"]))
+        group = (db_queries.append_group, fuzy(filters["--group"]))
+        query, params = query_append(db_queries.count_songs, "", genre, name, group)
+
+        return self.execute(query, params).fetchone()[0]
 
     def get_playlist(self, name: str):
         return self.execute(db_queries.get_playlist, (name,)).fetchone()
@@ -71,8 +95,12 @@ class DBMuziek:
         return self.execute(db_queries.get_song, (name,)).fetchone()
 
     def get_songs(self, filters: dict, offset: int = 0, limit: int = 50):
-        genre = filters["--genre"]
-        return self.execute(db_queries.get_songs, (genre, limit, offset)).fetchall()
+        genre = (db_queries.append_genre, filters["--genre"])
+        name = (db_queries.append_name, fuzy(filters["--name"]))
+        group = (db_queries.append_group, fuzy(filters["--group"]))
+        query, params = query_append(db_queries.get_songs, db_queries.paging, genre, name, group)
+
+        return self.execute(query, (*params, limit, offset)).fetchall()
 
     def get_group(self, name: str):
         return self.execute(db_queries.get_group, (name,)).fetchone()
@@ -100,9 +128,6 @@ class DBMuziek:
 
     def update_song(self, song_id: int, link: str, genre: str, group_id: int):
         return self.execute(db_queries.update_song, (link, genre, group_id, song_id))
-
-    def search_song(self, name: str):
-        return self.execute(db_queries.search_song, (name,)).fetchall()
 
     def create_album(self, name: str, songs: List[int], group_id: int) -> int:
         album_id = self.execute(db_queries.create_album, (name, group_id)).lastrowid
