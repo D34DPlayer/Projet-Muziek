@@ -47,6 +47,10 @@ class DBMuziek:
         self._connection.close()
         self._connection = None
 
+    @property
+    def connection(self):
+        return self._connection
+
     def execute(self, query: str, parameters=()) -> sqlite3.Cursor:
         return self._connection.execute(query, parameters)
 

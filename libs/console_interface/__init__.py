@@ -39,12 +39,12 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         else:
             group_id = group_query["group_id"]
 
-    if update == 'y':
-        db.update_song(song["song_id"], link, genre, group_id)
-        song_id = song["song_id"]
-    else:
-        song_id = db.create_song(name, link, genre, group_id)
-    db.commit()
+    with db.connection:
+        if update == 'y':
+            db.update_song(song["song_id"], link, genre, group_id)
+            song_id = song["song_id"]
+        else:
+            song_id = db.create_song(name, link, genre, group_id)
 
     return song_id
 
@@ -52,8 +52,9 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
 def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
     playlist = db.get_playlist(name)
     if playlist is None:
-        playlist = create_playlist(db, name)
-        print(f'The playlist "{name}" has been successfully created.')
+        with db.connection:
+            playlist = create_playlist(db, name)
+            print(f'The playlist "{name}" has been successfully created.')
 
     playlist_id, author = playlist
     for song_name in songs:
@@ -65,10 +66,9 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
         else:
             song_id = song["song_id"]
 
-        db.add_song_playlist(playlist_id, song_id)
-        print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
-
-    db.commit()
+        with db.connection:
+            db.add_song_playlist(playlist_id, song_id)
+            print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
 
 
 def add_group(db: DBMuziek, name: str = None):
@@ -99,12 +99,12 @@ def add_group(db: DBMuziek, name: str = None):
                 break
         members.append(member)
 
-    if update == 'y':
-        db.update_group(group["group_id"], members)
-        group_id = group["group_id"]
-    else:
-        group_id = db.create_group(name, members)
-    db.commit()
+    with db.connection:
+        if update == 'y':
+            db.update_group(group["group_id"], members)
+            group_id = group["group_id"]
+        else:
+            group_id = db.create_group(name, members)
 
     return group_id
 
@@ -154,12 +154,12 @@ def add_album(db: DBMuziek):
             song_id = song_query["song_id"]
         songs.append(song_id)
 
-    if update == 'y':
-        db.update_album(album["album_id"], songs)
-        album_id = album["album_id"]
-    else:
-        album_id = db.create_album(name, songs, group_id)
-    db.commit()
+    with db.connection:
+        if update == 'y':
+            db.update_album(album["album_id"], songs)
+            album_id = album["album_id"]
+        else:
+            album_id = db.create_album(name, songs, group_id)
 
     return album_id
 
@@ -211,9 +211,9 @@ def list_playlist(db: DBMuziek, name: str):
     """
     playlist = db.get_playlist(name)
     if playlist is None:
-        playlist = create_playlist(db, name)
-        print(f'The playlist "{name}" has been successfully created.')
-        db.commit()
+        with db.connection:
+            playlist = create_playlist(db, name)
+            print(f'The playlist "{name}" has been successfully created.')
 
     playlist_id, author = playlist
     utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
