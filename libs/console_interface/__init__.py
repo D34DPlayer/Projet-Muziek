@@ -1,6 +1,7 @@
 from typing import List
 
 from ..database import DBMuziek
+from ..downloader import SongDownloader
 from . import utils
 
 
@@ -224,7 +225,8 @@ def list_playlist(db: DBMuziek, name: str):
 
 def create_playlist(db: DBMuziek, name: str) -> (int, str):
     """Create a playlist in the database and return its id and author.
-    Does not commit the transaction.
+        Does not commit the transaction.
+        @Mathieu
 
     :param db: The database used.
     :param name: The playlist's name.
@@ -235,3 +237,37 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
     playlist_id = db.create_playlist(name, author)
 
     return playlist_id, author
+
+
+def download_song(db: DBMuziek, name: str):
+    downloader = SongDownloader()
+
+    if not (song_query := db.get_song(name)):
+        reply = utils.question_choice(f'The song "{name}" doesn\'t. exist yet. Do you want to create it?',
+                                      ['y', 'n'])
+        if reply == 'y':
+            return add_song(db, name)
+        else:
+            return None
+
+    print(f'Checking if the link is valid...')
+
+    if not (video_info := downloader.fetch_song(song_query["link"])):
+        print("No video could be found with the provided link. Modify the song entry to change it.")
+        return None
+
+    print(f'Checking if the song has already been downloaded...')
+
+    if downloader.is_downloaded(song_query["song_id"]):
+        reply = utils.question_choice(f'The song {name} has already been downloaded. Do you want to override it?',
+                              ['y', 'n'])
+        if reply == "n":
+            return
+        else:
+            downloader.delete_song(song_query["song_id"])
+
+    print(f'The video called {video_info["title"]} is being downloaded...')
+
+    downloader.download_song(song_query)
+
+    print("Download complete.")
