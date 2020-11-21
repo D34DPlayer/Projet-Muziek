@@ -22,7 +22,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
     if song := db.get_song(name):
         update = utils.question_choice(f'The song "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
-            return song[0]
+            return song["song_id"]
 
     link = utils.question("Youtube link")
 
@@ -37,11 +37,11 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             if reply == 'n' or not (group_id := add_group(db, group)):
                 return None
         else:
-            group_id = group_query[0]
+            group_id = group_query["group_id"]
 
     if update == 'y':
-        db.update_song(song[0], link, genre, group_id)
-        song_id = song[0]
+        db.update_song(song["song_id"], link, genre, group_id)
+        song_id = song["song_id"]
     else:
         song_id = db.create_song(name, link, genre, group_id)
     db.commit()
@@ -63,7 +63,7 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
             if reply == 'n' or not (song_id := add_song(db, song_name)):
                 continue
         else:
-            song_id = song[0]
+            song_id = song["song_id"]
 
         db.add_song_playlist(playlist_id, song_id)
         print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
@@ -87,7 +87,7 @@ def add_group(db: DBMuziek, name: str = None):
     if group := db.get_group(name):
         update = utils.question_choice(f'The group "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
-            return group[0]
+            return group["group_id"]
 
     members = []
     while True:
@@ -100,8 +100,8 @@ def add_group(db: DBMuziek, name: str = None):
         members.append(member)
 
     if update == 'y':
-        db.update_group(group[0], members)
-        group_id = group[0]
+        db.update_group(group["group_id"], members)
+        group_id = group["group_id"]
     else:
         group_id = db.create_group(name, members)
     db.commit()
@@ -124,9 +124,9 @@ def add_album(db: DBMuziek):
     if album := db.get_album(name):
         update = utils.question_choice(f'The album "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
-            return album[0]
+            return album["album_id"]
         else:
-            group_id = album[1]
+            group_id = album["group_id"]
     else:
         group = utils.question("Group")
         if not (group_query := db.get_group(group)):
@@ -151,12 +151,12 @@ def add_album(db: DBMuziek):
             if reply == 'n' or not (song_id := add_song(db, song, group_id)):
                 continue
         else:
-            song_id = song_query[0]
+            song_id = song_query["song_id"]
         songs.append(song_id)
 
     if update == 'y':
-        db.update_album(album[0], songs)
-        album_id = album[0]
+        db.update_album(album["album_id"], songs)
+        album_id = album["album_id"]
     else:
         album_id = db.create_album(name, songs, group_id)
     db.commit()

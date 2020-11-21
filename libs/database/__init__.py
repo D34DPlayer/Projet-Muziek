@@ -41,6 +41,7 @@ class DBMuziek:
 
     def connect(self):
         self._connection = sqlite3.connect(self._path)
+        self._connection.row_factory = sqlite3.Row
 
     def disconnect(self):
         self._connection.close()
