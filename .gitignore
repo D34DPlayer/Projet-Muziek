@@ -1,6 +1,7 @@
 # data
 /songs
 /muziek.db
+/muziek.log
 
 # Libs
 __pycache__/
@@ -11,3 +12,4 @@ __pycache__/
 # sublime
 *.sublime-project
 *.sublime-workspace
+

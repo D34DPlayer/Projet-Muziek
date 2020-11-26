@@ -1,8 +1,18 @@
 from typing import List
+import logging
 
 from ..database import DBMuziek
 from ..downloader import SongDownloader
 from . import utils
+
+
+handler = logging.FileHandler("muziek.log", "a", encoding="utf-8")
+formatter = logging.Formatter('[Muziek] %(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger = logging.getLogger("cli")
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+logger.info("Muziek has been launched.")
 
 
 def add_song(db: DBMuziek, name: str = None, group_id: int = None):
@@ -47,6 +57,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         else:
             song_id = db.create_song(name, link, genre, group_id)
 
+    logger.info(f"The song {name} has been added with the ID {song_id}.")
     return song_id
 
 
@@ -240,7 +251,7 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
 
 
 def download_song(db: DBMuziek, name: str):
-    downloader = SongDownloader()
+    downloader = SongDownloader(logger)
 
     if not (song_query := db.get_song(name)):
         reply = utils.question_choice(f'The song "{name}" doesn\'t. exist yet. Do you want to create it?',
@@ -250,17 +261,17 @@ def download_song(db: DBMuziek, name: str):
         else:
             return None
 
-    print(f'Checking if the link is valid...')
+    print('Checking if the link is valid...')
 
     if not (video_info := downloader.fetch_song(song_query["link"])):
         print("No video could be found with the provided link. Modify the song entry to change it.")
         return None
 
-    print(f'Checking if the song has already been downloaded...')
+    print('Checking if the song has already been downloaded...')
 
     if downloader.is_downloaded(song_query["song_id"]):
         reply = utils.question_choice(f'The song {name} has already been downloaded. Do you want to override it?',
-                              ['y', 'n'])
+                                      ['y', 'n'])
         if reply == "n":
             return
         else:

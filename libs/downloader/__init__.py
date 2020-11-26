@@ -1,6 +1,7 @@
 import youtube_dl
 import os
 
+
 default_config = {
     "quiet": True,
     "format": "bestaudio/best",
@@ -9,13 +10,18 @@ default_config = {
         'preferredcodec': 'mp3',
         'preferredquality': '192',
     }],
-    "download_dir": "./songs"
+    "download_dir": "./songs",
+    "ignoreerrors": True,
+    "no_color": True
 }
 
 
 class SongDownloader(youtube_dl.YoutubeDL):
-    def __init__(self, config: dict = {}):
+    def __init__(self, logger=None, config: dict = {}):
         self._config = {**default_config, **config}
+        if logger:
+            self._config["logger"] = logger
+
         self._video_info = None
         if not os.path.exists(self._config["download_dir"]):
             os.mkdir(self._config["download_dir"])
@@ -23,13 +29,9 @@ class SongDownloader(youtube_dl.YoutubeDL):
         super().__init__(self._config)
 
     def fetch_song(self, url: str):
-        try:
-            info = self.extract_info(url=url, download=False)
-        except Exception as e:
-            return None
-        else:
-            self._video_info = info
-            return info
+        info = self.extract_info(url=url, download=False)
+        self._video_info = info
+        return info
 
     def download_song(self, song_data):
         if not self._video_info:
