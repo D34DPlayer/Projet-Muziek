@@ -54,10 +54,11 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         if update == 'y':
             db.update_song(song["song_id"], link, genre, group_id)
             song_id = song["song_id"]
+            logger.info(f"The song {name} has been updated.")
         else:
             song_id = db.create_song(name, link, genre, group_id)
+            logger.info(f"The song {name} has been added with the ID {song_id}.")
 
-    logger.info(f"The song {name} has been added with the ID {song_id}.")
     return song_id
 
 
@@ -81,6 +82,7 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
         with db.connection:
             db.add_song_playlist(playlist_id, song_id)
             print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
+            logger.info(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
 
 
 def add_group(db: DBMuziek, name: str = None):
@@ -115,8 +117,10 @@ def add_group(db: DBMuziek, name: str = None):
         if update == 'y':
             db.update_group(group["group_id"], members)
             group_id = group["group_id"]
+            logger.info(f"The group {name} has been updated.")
         else:
             group_id = db.create_group(name, members)
+            logger.info(f"The group {name} has been added with the ID {group_id}.")
 
     return group_id
 
@@ -170,8 +174,10 @@ def add_album(db: DBMuziek):
         if update == 'y':
             db.update_album(album["album_id"], songs)
             album_id = album["album_id"]
+            logger.info(f"The album {name} has been updated.")
         else:
             album_id = db.create_album(name, songs, group_id)
+            logger.info(f"The group {name} has been added with the ID {album_id}.")
 
     return album_id
 
@@ -226,6 +232,7 @@ def list_playlist(db: DBMuziek, name: str):
         with db.connection:
             playlist = create_playlist(db, name)
             print(f'The playlist "{name}" has been successfully created.')
+            logger.info(f'The playlist "{name}" has been successfully created.')
 
     playlist_id, author = playlist
     utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
@@ -282,3 +289,4 @@ def download_song(db: DBMuziek, name: str):
     downloader.download_song(song_query)
 
     print("Download complete.")
+    logger.info(f'The song {name} has been downloaded.')
