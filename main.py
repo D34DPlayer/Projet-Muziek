@@ -6,7 +6,7 @@ Usage:
   main.py [-d <PATH>] list songs [-g <genre>] [-n <name>] [-G group]
   main.py [-d <PATH>] list group <name>
   main.py [-d <PATH>] list album <name>
-  main.py [-d <PATH>] search song <name>
+  main.py [-d <PATH>] download song <name>
   main.py -h | --help
   main.py --version
 
@@ -52,6 +52,6 @@ if __name__ == "__main__":
             else:
                 cli.add_song_playlist(db, args['<name>'], args['--song'])
 
-        elif args['search']:
+        elif args['download']:
             if args['song']:
-                cli.search_song(db, args['<name>'])
+                cli.download_song(db, args['<name>'])

@@ -71,7 +71,12 @@ SELECT count(song_id)
 
 get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
 
-get_song = "SELECT song_id FROM songs WHERE name = ?;"
+get_song = '''
+SELECT s.song_id, s.name as song_name, g.name as group_name, link
+    FROM songs as s
+        LEFT JOIN groups g on s.group_id = g.group_id
+    WHERE s.name = ?;
+'''
 
 get_songs = '''
 SELECT s.song_id, s.name, s.duration, g.name

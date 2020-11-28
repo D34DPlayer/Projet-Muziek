@@ -1,7 +1,18 @@
 from typing import List
+import logging
 
 from ..database import DBMuziek
+from ..downloader import SongDownloader
 from . import utils
+
+
+handler = logging.FileHandler("muziek.log", "a", encoding="utf-8")
+formatter = logging.Formatter('[Muziek] %(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger = logging.getLogger("cli")
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+logger.info("Muziek has been launched.")
 
 
 def add_song(db: DBMuziek, name: str = None, group_id: int = None):
@@ -22,7 +33,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
     if song := db.get_song(name):
         update = utils.question_choice(f'The song "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
-            return song[0]
+            return song["song_id"]
 
     link = utils.question("Youtube link")
 
@@ -37,14 +48,16 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             if reply == 'n' or not (group_id := add_group(db, group)):
                 return None
         else:
-            group_id = group_query[0]
+            group_id = group_query["group_id"]
 
-    if update == 'y':
-        db.update_song(song[0], link, genre, group_id)
-        song_id = song[0]
-    else:
-        song_id = db.create_song(name, link, genre, group_id)
-    db.commit()
+    with db.connection:
+        if update == 'y':
+            db.update_song(song["song_id"], link, genre, group_id)
+            song_id = song["song_id"]
+            logger.info(f"The song {name} has been updated.")
+        else:
+            song_id = db.create_song(name, link, genre, group_id)
+            logger.info(f"The song {name} has been added with the ID {song_id}.")
 
     return song_id
 
@@ -52,8 +65,9 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
 def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
     playlist = db.get_playlist(name)
     if playlist is None:
-        playlist = create_playlist(db, name)
-        print(f'The playlist "{name}" has been successfully created.')
+        with db.connection:
+            playlist = create_playlist(db, name)
+            print(f'The playlist "{name}" has been successfully created.')
 
     playlist_id, author = playlist
     for song_name in songs:
@@ -63,12 +77,12 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
             if reply == 'n' or not (song_id := add_song(db, song_name)):
                 continue
         else:
-            song_id = song[0]
+            song_id = song["song_id"]
 
-        db.add_song_playlist(playlist_id, song_id)
-        print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
-
-    db.commit()
+        with db.connection:
+            db.add_song_playlist(playlist_id, song_id)
+            print(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
+            logger.info(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
 
 
 def add_group(db: DBMuziek, name: str = None):
@@ -87,7 +101,7 @@ def add_group(db: DBMuziek, name: str = None):
     if group := db.get_group(name):
         update = utils.question_choice(f'The group "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
-            return group[0]
+            return group["group_id"]
 
     members = []
     while True:
@@ -99,12 +113,14 @@ def add_group(db: DBMuziek, name: str = None):
                 break
         members.append(member)
 
-    if update == 'y':
-        db.update_group(group[0], members)
-        group_id = group[0]
-    else:
-        group_id = db.create_group(name, members)
-    db.commit()
+    with db.connection:
+        if update == 'y':
+            db.update_group(group["group_id"], members)
+            group_id = group["group_id"]
+            logger.info(f"The group {name} has been updated.")
+        else:
+            group_id = db.create_group(name, members)
+            logger.info(f"The group {name} has been added with the ID {group_id}.")
 
     return group_id
 
@@ -124,9 +140,9 @@ def add_album(db: DBMuziek):
     if album := db.get_album(name):
         update = utils.question_choice(f'The album "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
-            return album[0]
+            return album["album_id"]
         else:
-            group_id = album[1]
+            group_id = album["group_id"]
     else:
         group = utils.question("Group")
         if not (group_query := db.get_group(group)):
@@ -151,15 +167,17 @@ def add_album(db: DBMuziek):
             if reply == 'n' or not (song_id := add_song(db, song, group_id)):
                 continue
         else:
-            song_id = song_query[0]
+            song_id = song_query["song_id"]
         songs.append(song_id)
 
-    if update == 'y':
-        db.update_album(album[0], songs)
-        album_id = album[0]
-    else:
-        album_id = db.create_album(name, songs, group_id)
-    db.commit()
+    with db.connection:
+        if update == 'y':
+            db.update_album(album["album_id"], songs)
+            album_id = album["album_id"]
+            logger.info(f"The album {name} has been updated.")
+        else:
+            album_id = db.create_album(name, songs, group_id)
+            logger.info(f"The group {name} has been added with the ID {album_id}.")
 
     return album_id
 
@@ -211,9 +229,10 @@ def list_playlist(db: DBMuziek, name: str):
     """
     playlist = db.get_playlist(name)
     if playlist is None:
-        playlist = create_playlist(db, name)
-        print(f'The playlist "{name}" has been successfully created.')
-        db.commit()
+        with db.connection:
+            playlist = create_playlist(db, name)
+            print(f'The playlist "{name}" has been successfully created.')
+            logger.info(f'The playlist "{name}" has been successfully created.')
 
     playlist_id, author = playlist
     utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
@@ -224,7 +243,8 @@ def list_playlist(db: DBMuziek, name: str):
 
 def create_playlist(db: DBMuziek, name: str) -> (int, str):
     """Create a playlist in the database and return its id and author.
-    Does not commit the transaction.
+        Does not commit the transaction.
+        @Mathieu
 
     :param db: The database used.
     :param name: The playlist's name.
@@ -235,3 +255,38 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
     playlist_id = db.create_playlist(name, author)
 
     return playlist_id, author
+
+
+def download_song(db: DBMuziek, name: str):
+    downloader = SongDownloader(logger)
+
+    if not (song_query := db.get_song(name)):
+        reply = utils.question_choice(f'The song "{name}" doesn\'t. exist yet. Do you want to create it?',
+                                      ['y', 'n'])
+        if reply == 'y':
+            return add_song(db, name)
+        else:
+            return None
+
+    print('Checking if the link is valid...')
+
+    if not (video_info := downloader.fetch_song(song_query["link"])):
+        print("No video could be found with the provided link. Modify the song entry to change it.")
+        return None
+
+    print('Checking if the song has already been downloaded...')
+
+    if downloader.is_downloaded(song_query["song_id"]):
+        reply = utils.question_choice(f'The song {name} has already been downloaded. Do you want to override it?',
+                                      ['y', 'n'])
+        if reply == "n":
+            return
+        else:
+            downloader.delete_song(song_query["song_id"])
+
+    print(f'The video called {video_info["title"]} is being downloaded...')
+
+    downloader.download_song(song_query)
+
+    print("Download complete.")
+    logger.info(f'The song {name} has been downloaded.')
