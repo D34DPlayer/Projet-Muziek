@@ -77,8 +77,8 @@ def format_duration(duration: int = None):
 
 def pagination(total: int, page: int) -> int:
     """Display a pagination, prompt the user for a new page and return it.
-    @MATHIEU
 
+    :author: Mathieu
     :param total: The total number of pages.
     :param page: The current page.
     :return: The new page to show. -1 if the user wants to quit.
