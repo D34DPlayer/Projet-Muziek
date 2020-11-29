@@ -87,7 +87,7 @@ def pagination(total: int, page: int) -> int:
         pages = []
 
         anchors = [1, page, total]
-        anchors = list(sorted(set(anchors))) # removes duplicates
+        anchors = list(sorted(set(anchors)))  # removes duplicates
         for i in range(len(anchors) - 1):
             a, b = anchors[i], anchors[i + 1]
             if b - a < 6:
