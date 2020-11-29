@@ -182,34 +182,22 @@ def add_album(db: DBMuziek):
     return album_id
 
 
-def list_songs(db: DBMuziek, filters: dict, offset: int = 0):
-    songs = db.get_songs(filters, offset=offset, limit=20)
-    utils.display_songs(songs)
+def list_songs(db: DBMuziek, filters: dict):
+    """List all songs from the database and display it on the screen with pagination.
+        @MATHIEU
 
-    count = db.count_songs(filters) // 20
-    if count > 1:
-        page = int(offset / 20)
+        :param db: The used database.
+        :param filters: The filters to apply before listing.
+    """
+    # Make pages of 20 songs
+    pages, rem = divmod(db.count_songs(filters), 20)
+    pages += rem > 0 # then add the last page if there are remaining songs
 
-        start = min(count + 1, 2) if count < 5 else count + 1
-        pages = [str(i) for i in range(1, start)]
-
-        if count > 5:
-            pages.append('...')
-            pages += [str(i) for i in range(count - 2, count + 1)]
-
-        list_pages = (' ' + ' '.join(pages) + ' ').replace(f' {page + 1} ', f' [{page + 1}] ')
-        print(f'Pages:{list_pages}')
-
-        page = 0
-        while page < 1 or page > count:
-            page = input('Display another page: ').strip()
-
-            if len(page) == 0:
-                return
-
-            page = int(page) if page.isdecimal() else 0
-
-        list_songs(db, filters, offset=(page - 1) * 20)
+    page = 0
+    while page > -1:
+        songs = db.get_songs(filters, offset=page * 20, limit=20)
+        utils.display_songs(songs)
+        page = utils.pagination(pages, page + 1) - 1
 
 
 def list_group(db: DBMuziek, name: str):
