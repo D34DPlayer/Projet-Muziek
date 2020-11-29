@@ -191,7 +191,7 @@ def list_songs(db: DBMuziek, filters: dict):
     """
     # Make pages of 20 songs
     pages, rem = divmod(db.count_songs(filters), 20)
-    pages += rem > 0 # then add the last page if there are remaining songs
+    pages += rem > 0  # then add the last page if there are remaining songs
 
     page = 0
     while page > -1:
