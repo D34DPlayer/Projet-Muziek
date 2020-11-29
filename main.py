@@ -28,6 +28,7 @@ from libs.database import DBMuziek
 
 if __name__ == "__main__":
     args = docopt.docopt(__doc__, version=__version__)
+    filters = {k.lstrip('-'): v for k, v in args.items() if k.startswith('--')}
 
     with DBMuziek(args['--database']) as db:
         if args['add']:
@@ -40,7 +41,7 @@ if __name__ == "__main__":
 
         elif args['list']:
             if args['songs']:
-                cli.list_songs(db, args)
+                cli.list_songs(db, filters)
             elif args['group']:
                 cli.list_group(db, args['<name>'])
             elif args['album']:
