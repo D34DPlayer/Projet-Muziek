@@ -112,11 +112,22 @@ class DBMuziek:
 
         return self.execute(query, (*params, limit, offset)).fetchall()
 
-    def get_group(self, name: str):
-        return self.execute(db_queries.get_group, (name,)).fetchone()
+    def get_group(self, name: str, verbose: bool = False):
+        group_query = self.execute(db_queries.get_group, (name,)).fetchone()
+        if not verbose:
+            return group_query
+        elif group_query:
+            songs = self.execute(db_queries.count_group_songs, (group_query["group_id"],)).fetchone()["count"]
+            albums = self.execute(db_queries.count_group_albums, (group_query["group_id"],)).fetchone()["count"]
+            return group_query, songs, albums
 
-    def get_album(self, name: str):
-        return self.execute(db_queries.get_album, (name,)).fetchone()
+    def get_album(self, name: str, verbose: bool = False):
+        album_query = self.execute(db_queries.get_album, (name,)).fetchone()
+        if not verbose:
+            return album_query
+        elif album_query:
+            songs = self.execute(db_queries.get_songs_album, (album_query["album_id"],)).fetchall()
+            return album_query, songs
 
     def add_song_playlist(self, playlist_id: int, song_id: int):
         return self.execute(db_queries.add_song_playlist, (playlist_id, song_id))

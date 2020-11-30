@@ -140,16 +140,18 @@ def add_group(db: DBMuziek, name: str = None):
     return group_id
 
 
-def add_album(db: DBMuziek):
+def add_album(db: DBMuziek, name: str = None):
     """Add an album to the database and ask the user for the needed info.
         There's also the option to modify an album that already exists in the database,
         and to create the group and songs if they don't exist yet.
 
         :author: Carlos
         :param db: The used database.
+        :param name: The name of the album.
         :return: The id of the created/modified album. None if nothing was created.
     """
-    name = utils.question("Name")
+    if not name:
+        name = utils.question("Name")
 
     update = 'n'
     if album := db.get_album(name):
@@ -216,11 +218,40 @@ def list_songs(db: DBMuziek, filters: dict):
 
 
 def list_group(db: DBMuziek, name: str):
-    return True
+    if not (group_query := db.get_group(name, True)):
+        reply = utils.question_choice(f'The group "{name}" doesn\'t. exist yet. Do you want to create it?',
+                                      ['y', 'n'])
+        if reply == 'y':
+            return add_group(db, name)
+        else:
+            return None
+
+    utils.print_underline('Group information:', style='=')
+
+    print(f'''    Name: {name}
+    Members: {', '.join(group_query[0]['members'].split(","))}
+    Songs: {group_query[1]}
+    Albums: {group_query[2]}
+    ''')
 
 
 def list_album(db: DBMuziek, name: str):
-    return True
+    if not (album_query := db.get_album(name, True)):
+        reply = utils.question_choice(f'The album "{name}" doesn\'t. exist yet. Do you want to create it?',
+                                      ['y', 'n'])
+        if reply == 'y':
+            return add_album(db, name)
+        else:
+            return None
+
+    utils.print_underline('Album information:', style='=')
+
+    print(f'''    Name: {name}
+    Group: {album_query[0]["group_name"]}
+    ''')
+
+    utils.print_underline('Songs:', style='=')
+    utils.display_songs(album_query[1])
 
 
 def list_playlist(db: DBMuziek, name: str):

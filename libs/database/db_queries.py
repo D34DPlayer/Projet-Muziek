@@ -110,7 +110,11 @@ append_group = "g.name LIKE ?"
 
 paging = "LIMIT ? OFFSET ?"
 
-get_group = "SELECT group_id FROM groups WHERE name = ?;"
+get_group = '''
+SELECT group_id, members, (select count(song_id) from songs where songs.group_id == groups.group_id)
+    FROM groups 
+    WHERE name = ?;
+'''
 
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
 
@@ -132,7 +136,12 @@ create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?
 
 update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
 
-get_album = "SELECT album_id, group_id FROM albums WHERE name = ?;"
+get_album = '''
+SELECT album_id, a.group_id as group_id, g.name as group_name
+    FROM albums as a
+        LEFT JOIN groups as g on a.group_id = g.group_id
+    WHERE a.name = ?;
+'''
 
 create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
 
@@ -141,3 +150,15 @@ add_song_album = "INSERT OR IGNORE INTO albumSongs VALUES (?, ?);"
 delete_album_songs = "DELETE FROM albumSongs WHERE album_id = ?;"
 
 add_song_featuring = "INSERT OR IGNORE INTO songFeaturing VALUES (?, ?);"
+
+count_group_songs = "SELECT COUNT(song_id) as count FROM songs WHERE group_id = ?;"
+
+count_group_albums = "SELECT COUNT(album_id) as count FROM albums WHERE group_id = ?;"
+
+get_songs_album = '''
+SELECT s.song_id, s.name, s.duration, g.name 
+    FROM albumSongs as a
+        LEFT JOIN songs as s on a.song_id = s.song_id
+        LEFT JOIN groups as g on s.group_id = g.group_id
+    WHERE a.album_id = ?;
+'''
