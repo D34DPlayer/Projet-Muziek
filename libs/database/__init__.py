@@ -295,11 +295,11 @@ class DBMuziek:
             self.execute(db_queries.add_song_album, (album_id, song_id))
 
     def get_setting(self, key: str, default: str = None) -> str:
-        value = self.execute(db_queries.get_setting, (key,)).fetchone()
-        if value is None:
+        row = self.execute(db_queries.get_setting, (key,)).fetchone()
+        if row is None:
             return default
 
-        return value
+        return row['value']
 
     def set_setting(self, key: str, value: str):
         self.execute(db_queries.set_setting, (key, str(value)))
