@@ -66,6 +66,8 @@ class DBMuziek:
 
         if not self.table_exists('songs'):
             self.execute(db_queries.create_songs)
+        if not self.table_exists('songFeaturing'):
+            self.execute(db_queries.create_songFeaturing)
 
         if not self.table_exists('playlists'):
             self.execute(db_queries.create_playlists)
@@ -76,6 +78,9 @@ class DBMuziek:
             self.execute(db_queries.create_albums)
         if not self.table_exists('albumSongs'):
             self.execute(db_queries.create_albumSongs)
+
+        if not self.table_exists('settings'):
+            self.execute(db_queries.create_settings)
 
     def table_exists(self, name: str) -> int:
         result = self.execute(db_queries.table_exists, (name,))
@@ -128,8 +133,13 @@ class DBMuziek:
     def update_group(self, group_id: int, members: List[str]):
         return self.execute(db_queries.update_group, (','.join(members), group_id))
 
-    def create_song(self, name: str, link: str, genre: str, group_id: int) -> int:
-        return self.execute(db_queries.create_song, (name, link, genre, group_id)).lastrowid
+    def create_song(self, name: str, link: str, genre: str, group_id: int, featuring: List[int]) -> int:
+        song_id = self.execute(db_queries.create_song, (name, link, genre, group_id)).lastrowid
+
+        for featuring_id in featuring:
+            self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
+
+        return song_id
 
     def update_song(self, song_id: int, link: str, genre: str, group_id: int):
         return self.execute(db_queries.update_song, (link, genre, group_id, song_id))

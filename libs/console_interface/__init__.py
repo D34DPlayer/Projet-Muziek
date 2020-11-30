@@ -50,13 +50,28 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         else:
             group_id = group_query["group_id"]
 
+    featuring = []
+    while True:
+        reply = utils.question(f"Featuring {len(featuring) + 1} ('Done' if there aren't any more)")
+        if reply == "Done":
+            break
+        if not (group_query := db.get_group(reply)):
+            reply2 = utils.question_choice(f'The group "{reply}" doesn\'t. exist yet. Do you want to create it?',
+                                           ['y', 'n'])
+            if reply2 == 'n' or not (featuring_id := add_group(db, reply)):
+                continue
+        else:
+            featuring_id = group_query["group_id"]
+
+        featuring.append(featuring_id)
+
     with db.connection:
         if update == 'y':
-            db.update_song(song["song_id"], link, genre, group_id)
+            db.update_song(song["song_id"], link, genre, group_id, featuring)
             song_id = song["song_id"]
             logger.info(f"The song {name} has been updated.")
         else:
-            song_id = db.create_song(name, link, genre, group_id)
+            song_id = db.create_song(name, link, genre, group_id, featuring)
             logger.info(f"The song {name} has been added with the ID {song_id}.")
 
     return song_id

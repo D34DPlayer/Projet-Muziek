@@ -63,6 +63,24 @@ CREATE TABLE playlistSongs (
 );
 '''
 
+create_songFeaturing = '''
+CREATE TABLE songFeaturing (
+    song_id INTEGER,
+    group_id INTEGER,
+    PRIMARY KEY (song_id, group_id),
+    FOREIGN KEY (song_id) REFERENCES SONGS (song_id),
+    FOREIGN KEY (group_id) REFERENCES GROUPS (group_id)
+);
+'''
+
+create_settings = '''
+CREATE TABLE settings (
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+    PRIMARY KEY (key)
+);
+'''
+
 count_songs = '''
 SELECT count(song_id)
     FROM songs as s
@@ -121,3 +139,5 @@ create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
 add_song_album = "INSERT OR IGNORE INTO albumSongs VALUES (?, ?);"
 
 delete_album_songs = "DELETE FROM albumSongs WHERE album_id = ?;"
+
+add_song_featuring = "INSERT OR IGNORE INTO songFeaturing VALUES (?, ?);"
