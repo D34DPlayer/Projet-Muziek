@@ -91,9 +91,9 @@ class DBMuziek:
         return result.fetchone()[0]
 
     def count_songs(self, filters: dict):
-        genre = (db_queries.append_genre, filters["--genre"])
-        name = (db_queries.append_name, fuzy(filters["--name"]))
-        group = (db_queries.append_group, fuzy(filters["--group"]))
+        genre = (db_queries.append_genre, filters["genre"])
+        name = (db_queries.append_name, fuzy(filters["name"]))
+        group = (db_queries.append_group, fuzy(filters["group"]))
         query, params = query_append(db_queries.count_songs, "", genre, name, group)
 
         return self.execute(query, params).fetchone()[0]
@@ -105,9 +105,9 @@ class DBMuziek:
         return self.execute(db_queries.get_song, (name,)).fetchone()
 
     def get_songs(self, filters: dict, offset: int = 0, limit: int = 50):
-        genre = (db_queries.append_genre, filters["--genre"])
-        name = (db_queries.append_name, fuzy(filters["--name"]))
-        group = (db_queries.append_group, fuzy(filters["--group"]))
+        genre = (db_queries.append_genre, filters["genre"])
+        name = (db_queries.append_name, fuzy(filters["name"]))
+        group = (db_queries.append_group, fuzy(filters["group"]))
         query, params = query_append(db_queries.get_songs, db_queries.paging, genre, name, group)
 
         return self.execute(query, (*params, limit, offset)).fetchall()

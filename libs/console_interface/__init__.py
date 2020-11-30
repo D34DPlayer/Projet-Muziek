@@ -19,8 +19,8 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
     """Add a song to the database and ask the user for the needed info.
         There's also the option to modify a song that already exists in the database,
         and to create the group if it doesn't exist yet.
-        @CARLOS
 
+        :author: Carlos
         :param db: The used database.
         :param name: The name of the song.
         :param group_id: The name of the group who made the song.
@@ -103,8 +103,8 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
 def add_group(db: DBMuziek, name: str = None):
     """Add a group to the database and ask the user for the needed info.
     There's also the option to modify a group that already exists in the database.
-    @CARLOS
 
+    :author: Carlos
     :param db: The used database.
     :param name: The name of the group.
     :return: The id of the created/modified group. None if nothing was created/modified.
@@ -144,8 +144,8 @@ def add_album(db: DBMuziek):
     """Add an album to the database and ask the user for the needed info.
         There's also the option to modify an album that already exists in the database,
         and to create the group and songs if they don't exist yet.
-        @CARLOS
 
+        :author: Carlos
         :param db: The used database.
         :return: The id of the created/modified album. None if nothing was created.
     """
@@ -197,34 +197,22 @@ def add_album(db: DBMuziek):
     return album_id
 
 
-def list_songs(db: DBMuziek, filters: dict, offset: int = 0):
-    songs = db.get_songs(filters, offset=offset, limit=20)
-    utils.display_songs(songs)
+def list_songs(db: DBMuziek, filters: dict):
+    """List all songs from the database and display it on the screen with pagination.
 
-    count = db.count_songs(filters) // 20
-    if count > 1:
-        page = int(offset / 20)
+        :author: Mathieu
+        :param db: The used database.
+        :param filters: The filters to apply before listing.
+    """
+    # Make pages of 20 songs
+    pages, rem = divmod(db.count_songs(filters), 20)
+    pages += rem > 0  # then add the last page if there are remaining songs
 
-        start = min(count + 1, 2) if count < 5 else count + 1
-        pages = [str(i) for i in range(1, start)]
-
-        if count > 5:
-            pages.append('...')
-            pages += [str(i) for i in range(count - 2, count + 1)]
-
-        list_pages = (' ' + ' '.join(pages) + ' ').replace(f' {page + 1} ', f' [{page + 1}] ')
-        print(f'Pages:{list_pages}')
-
-        page = 0
-        while page < 1 or page > count:
-            page = input('Display another page: ').strip()
-
-            if len(page) == 0:
-                return
-
-            page = int(page) if page.isdecimal() else 0
-
-        list_songs(db, filters, offset=(page - 1) * 20)
+    page = 0
+    while page > -1:
+        songs = db.get_songs(filters, offset=page * 20, limit=20)
+        utils.display_songs(songs)
+        page = utils.pagination(pages, page + 1) - 1
 
 
 def list_group(db: DBMuziek, name: str):
@@ -237,8 +225,8 @@ def list_album(db: DBMuziek, name: str):
 
 def list_playlist(db: DBMuziek, name: str):
     """Show the content of a playlist and create it if it doesn't exist yet.
-    @MATHIEU
 
+    :author: Mathieu
     :param db: The database used.
     :param name: The playlist's name.
     """
@@ -259,8 +247,8 @@ def list_playlist(db: DBMuziek, name: str):
 def create_playlist(db: DBMuziek, name: str) -> (int, str):
     """Create a playlist in the database and return its id and author.
         Does not commit the transaction.
-        @Mathieu
 
+    :author: Mathieu
     :param db: The database used.
     :param name: The playlist's name.
     :return: The playlist's id and its author.

@@ -73,3 +73,50 @@ def format_duration(duration: int = None):
         return '??:??'
 
     return '{}:{}'.format(*divmod(duration, 60))
+
+
+def pagination(total: int, page: int) -> int:
+    """Display a pagination, prompt the user for a new page and return it.
+
+    :author: Mathieu
+    :param total: The total number of pages.
+    :param page: The current page.
+    :return: The new page to show. -1 if the user wants to quit.
+    """
+    if total > 1:
+        pages = []
+
+        anchors = [1, page, total]
+        anchors = list(sorted(set(anchors)))  # removes duplicates
+        for i in range(len(anchors) - 1):
+            a, b = anchors[i], anchors[i + 1]
+            if b - a < 6:
+                # straight a → b
+                pages.extend(str(i) for i in range(a, b))
+            else:
+                # add the first 3 pages
+                pages.extend(str(i) for i in range(a, a + 3))
+                pages.append('..')
+                # add the last 2 pages, the third one is included by the next iteration
+                pages.extend(str(i) for i in range(b - 2, b))
+
+        # add the last page bc it's not included in the loop
+        pages.append(str(total))
+
+        if str(page) in pages:
+            pages[pages.index(str(page))] = f'[{page}]'
+
+        print(f"Pages: {' '.join(pages)}")
+
+        page = 0
+        while not 0 < page <= total:
+            page = input('Display another page: ').strip()
+
+            if len(page) == 0:
+                return -1
+
+            page = int(page) if page.isdecimal() else 0
+
+        return page
+
+    return -1
