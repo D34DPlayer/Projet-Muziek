@@ -35,6 +35,7 @@ class CallbackRequest(BaseHTTPRequestHandler):
 
         error = query.get('error')
         if error is not None:
+            logger.debug(f'Authorization aborted. Reason: {error}')
             self.reply(HTTPStatus.OK, f'Authorization aborted. Reason: {error}')
             self.stop_server()
             return
