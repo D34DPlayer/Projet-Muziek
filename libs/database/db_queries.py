@@ -112,7 +112,7 @@ paging = "LIMIT ? OFFSET ?"
 
 get_group = '''
 SELECT group_id, members, (select count(song_id) from songs where songs.group_id == groups.group_id)
-    FROM groups 
+    FROM groups
     WHERE name = ?;
 '''
 
@@ -156,7 +156,7 @@ count_group_songs = "SELECT COUNT(song_id) as count FROM songs WHERE group_id = 
 count_group_albums = "SELECT COUNT(album_id) as count FROM albums WHERE group_id = ?;"
 
 get_songs_album = '''
-SELECT s.song_id, s.name, s.duration, g.name 
+SELECT s.song_id, s.name, s.duration, g.name
     FROM albumSongs as a
         LEFT JOIN songs as s on a.song_id = s.song_id
         LEFT JOIN groups as g on s.group_id = g.group_id

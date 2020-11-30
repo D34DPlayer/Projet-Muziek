@@ -21,7 +21,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         and to create the group if it doesn't exist yet.
 
         :author: Carlos
-        :param db: The used database.
+        :param db: The database used.
         :param name: The name of the song.
         :param group_id: The name of the group who made the song.
         :return: The id of the created/modified group. None if nothing was created/modified.
@@ -35,7 +35,13 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
         if update == 'n':
             return song["song_id"]
 
-    link = utils.question("Youtube link")
+    link = ""
+    downloader = SongDownloader(logger)
+    while not link:
+        link = utils.question("Youtube link")
+        if not (video_info := downloader.fetch_song(link)):
+            print("No video could be found with the provided link.")
+            link = ""
 
     genre = utils.question("Genre")
 
@@ -74,10 +80,22 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             song_id = db.create_song(name, link, genre, group_id, featuring)
             logger.info(f"The song {name} has been added with the ID {song_id}.")
 
+    download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
+    if download == 'y':
+        downloader.download_song(db.get_song(name))
+        print("Download complete.")
+        logger.info(f"The song {name} has been downloaded.")
     return song_id
 
 
 def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
+    """
+    
+    :author: Mathieu
+    :param db: The database used.
+    :param name: The name of the playlist.
+    :param songs: List of names of songs to add to the playlist.
+    """
     playlist = db.get_playlist(name)
     if playlist is None:
         with db.connection:
@@ -105,7 +123,7 @@ def add_group(db: DBMuziek, name: str = None):
     There's also the option to modify a group that already exists in the database.
 
     :author: Carlos
-    :param db: The used database.
+    :param db: The database used.
     :param name: The name of the group.
     :return: The id of the created/modified group. None if nothing was created/modified.
     """
@@ -145,10 +163,10 @@ def add_album(db: DBMuziek, name: str = None):
         There's also the option to modify an album that already exists in the database,
         and to create the group and songs if they don't exist yet.
 
-        :author: Carlos
-        :param db: The used database.
-        :param name: The name of the album.
-        :return: The id of the created/modified album. None if nothing was created.
+    :author: Carlos
+    :param db: The database used.
+    :param name: The name of the album.
+    :return: The id of the created/modified album. None if nothing was created.
     """
     if not name:
         name = utils.question("Name")
@@ -203,7 +221,7 @@ def list_songs(db: DBMuziek, filters: dict):
     """List all songs from the database and display it on the screen with pagination.
 
         :author: Mathieu
-        :param db: The used database.
+        :param db: The database used.
         :param filters: The filters to apply before listing.
     """
     # Make pages of 20 songs
@@ -218,6 +236,12 @@ def list_songs(db: DBMuziek, filters: dict):
 
 
 def list_group(db: DBMuziek, name: str):
+    """List the information about a group stored in the database.
+
+    :author: Carlos
+    :param db: The database used.
+    :param name: The name of the group.
+    """
     if not (group_query := db.get_group(name, True)):
         reply = utils.question_choice(f'The group "{name}" doesn\'t. exist yet. Do you want to create it?',
                                       ['y', 'n'])
@@ -236,6 +260,12 @@ def list_group(db: DBMuziek, name: str):
 
 
 def list_album(db: DBMuziek, name: str):
+    """List the information about an album stored in the database, and a list of the songs it includes.
+
+    :author: Carlos
+    :param db: The database used.
+    :param name: The name of the album.
+    """
     if not (album_query := db.get_album(name, True)):
         reply = utils.question_choice(f'The album "{name}" doesn\'t. exist yet. Do you want to create it?',
                                       ['y', 'n'])
@@ -271,7 +301,7 @@ def list_playlist(db: DBMuziek, name: str):
     playlist_id, author = playlist
     utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
 
-    songs = db.get_playlist_data(playlist_id)
+    songs = db.get_playlist_songs(playlist_id)
     utils.display_songs(songs)
 
 
@@ -292,6 +322,12 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
 
 
 def download_song(db: DBMuziek, name: str):
+    """Downloads the song requested based on the url stored in the database.
+
+    :author: Carlos
+    :param db: The database used.
+    :param name: Name of the song to download.
+    """
     downloader = SongDownloader(logger)
 
     if not (song_query := db.get_song(name)):
@@ -314,7 +350,7 @@ def download_song(db: DBMuziek, name: str):
         reply = utils.question_choice(f'The song {name} has already been downloaded. Do you want to override it?',
                                       ['y', 'n'])
         if reply == "n":
-            return
+            return None
         else:
             downloader.delete_song(song_query["song_id"])
 
