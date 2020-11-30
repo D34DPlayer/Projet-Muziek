@@ -293,3 +293,13 @@ class DBMuziek:
         self.execute(db_queries.delete_album_songs, (album_id,))
         for song_id in songs:
             self.execute(db_queries.add_song_album, (album_id, song_id))
+
+    def get_setting(self, key: str, default: str = None) -> str:
+        value = self.execute(db_queries.get_setting, (key,)).fetchone()
+        if value is None:
+            return default
+
+        return value
+
+    def set_setting(self, key: str, value: str):
+        self.execute(db_queries.set_setting, (key, str(value)))

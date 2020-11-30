@@ -162,3 +162,7 @@ SELECT s.song_id, s.name, s.duration, g.name
         LEFT JOIN groups as g on s.group_id = g.group_id
     WHERE a.album_id = ?;
 '''
+
+get_setting = "SELECT value FROM settings WHERE key = ?;"
+
+set_setting = "INSERT OR REPLACE INTO settings(key, value) VALUES (?, ?);"
