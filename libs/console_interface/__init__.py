@@ -39,7 +39,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
     downloader = SongDownloader(logger)
     while not link:
         link = utils.question("Youtube link")
-        if not (video_info := downloader.fetch_song(link)):
+        if not (downloader.fetch_song(link)):
             print("No video could be found with the provided link.")
             link = ""
 
@@ -89,8 +89,9 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
 
 
 def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
-    """
-    
+    """Add a list of songs to a playlist, will create the playlist if needed.
+    If a song doesn't exist yet, the user can create it diretly if they want to.
+
     :author: Mathieu
     :param db: The database used.
     :param name: The name of the playlist.
