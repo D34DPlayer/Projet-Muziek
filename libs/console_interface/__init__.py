@@ -12,7 +12,6 @@ handler.setFormatter(formatter)
 logger = logging.getLogger("cli")
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
-logger.info("Muziek has been launched.")
 
 
 def add_song(db: DBMuziek, name: str = None, group_id: int = None):
@@ -38,15 +37,15 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
     link = ""
     downloader = SongDownloader(logger)
     while not link:
-        link = utils.question("Youtube link")
+        link = utils.question("Youtube link", song["link"] if song else None)
         if not (downloader.fetch_song(link)):
             print("No video could be found with the provided link.")
             link = ""
 
-    genre = utils.question("Genre")
+    genre = utils.question("Genre", song["genre"] if song else None)
 
     if not group_id:
-        group = utils.question("Group")
+        group = utils.question("Group", song["group_name"] if song else None)
 
         if not (group_query := db.get_group(group)):
             reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?',
@@ -76,11 +75,20 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             db.update_song(song["song_id"], link, genre, group_id, featuring)
             song_id = song["song_id"]
             logger.info(f"The song {name} has been updated.")
+
+            if downloader.is_downloaded(song_id):
+                download = utils.question_choice("Do you want to redownload the song?", ['y', 'n'])
+                if download == 'n':
+                    downloader.update_metadata(db.get_song(name))
+                    logger.info(f"The metadata of the local song {name} has been updated.")
+            else:
+                download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
+
         else:
             song_id = db.create_song(name, link, genre, group_id, featuring)
             logger.info(f"The song {name} has been added with the ID {song_id}.")
+            download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
 
-    download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
     if download == 'y':
         downloader.download_song(db.get_song(name))
         print("Download complete.")
