@@ -1,5 +1,6 @@
 import youtube_dl
 import os
+import music_tag
 
 
 default_config = {
@@ -18,6 +19,12 @@ default_config = {
 
 class SongDownloader(youtube_dl.YoutubeDL):
     def __init__(self, logger=None, config: dict = {}):
+        """Creates the SongDownloader object with the settings provided.
+
+        :author: Carlos
+        :param logger: The logger the logging messages will be sent to.
+        :param config: The SongDownloader configuration.
+        """
         self._config = {**default_config, **config}
         if logger:
             self._config["logger"] = logger
@@ -29,11 +36,25 @@ class SongDownloader(youtube_dl.YoutubeDL):
         super().__init__(self._config)
 
     def fetch_song(self, url: str):
+        """Will extract the information from the provided link and return it.
+
+        :author: Carlos
+        :param url: The url of the video.
+        :return: A dict with the video information if the url is correct, None if the url isn't.
+        """
         info = self.extract_info(url=url, download=False)
         self._video_info = info
         return info
 
     def download_song(self, song_data):
+        """Will download the previously fetched song and use the information from the database to choose
+        where and how to store it.
+        The song will be stored at "${download_dir}/${song_id}/${song_name} - ${group_name}.mp3"
+        with the right metadata.
+
+        :author: Carlos
+        :param song_data: The information about the song stored in the database.
+        """
         if not self._video_info:
             raise ValueError("A video needs to be fetched before it can be downloaded.")
 
@@ -41,18 +62,49 @@ class SongDownloader(youtube_dl.YoutubeDL):
         if not os.path.exists(download_folder):
             os.mkdir(download_folder)
 
-        file_name = f'{song_data["song_name"]} - {song_data["group_name"]}.mp3'
+        file_name = f'{song_data["song_name"]} - {song_data["group_name"]}.%(ext)s'
         self.params["outtmpl"] = os.path.join(download_folder, file_name)
 
         self.prepare_filename(self._video_info)
         self.download([self._video_info["url"]])
 
+        self.update_metadata(song_data)
+
     def is_downloaded(self, song_id: int):
+        """Checks if a song has already been downloaded.
+
+        :author: Carlos
+        :param song_id: The song to check.
+        :return: True if the song has already been downloaded, False otherwise.
+        """
         download_folder = os.path.join(self._config["download_dir"], str(song_id))
         return os.path.isdir(download_folder) and os.listdir(download_folder)
 
     def delete_song(self, song_id: int):
+        """Deletes a song (if it has been downloaded) from the local storage.
+
+        :author: Carlos
+        :param song_id: The id of the song to delete.
+        """
         download_folder = os.path.join(self._config["download_dir"], str(song_id))
         if self.is_downloaded(song_id):
             for file in os.listdir(download_folder):
                 os.remove(os.path.join(download_folder, file))
+
+    def update_metadata(self, song_data):
+        """Updates the metadata of the stored MP3 (if it exists) to fit the information stored in the database.
+
+        :author: Carlos
+        :param song_data: The information about the song stored in the database.
+        """
+        if not self.is_downloaded(song_data["song_id"]):
+            return
+
+        download_folder = os.path.join(self._config["download_dir"], str(song_data["song_id"]))
+
+        song_name = os.listdir(download_folder)[0]
+        f = music_tag.load_file(os.path.join(download_folder, song_name))
+        f['artist'] = song_data["group_name"]
+        f['genre'] = song_data["genre"]
+        f['tracktitle'] = song_data["song_name"]
+        f.save()

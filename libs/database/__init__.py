@@ -273,6 +273,15 @@ class DBMuziek:
         return self.execute(db_queries.update_group, (','.join(members), group_id))
 
     def create_song(self, name: str, link: str, genre: str, group_id: int, featuring: List[int]) -> int:
+        """Creates a new song in the database.
+
+        :param name: Name of the song.
+        :param link: Link to the song in YouTube.
+        :param genre: Genre of the song.
+        :param group_id: Id of the author of the song.
+        :param featuring: List of id's for the groups featuring this song.
+        :return: Id o the song created.
+        """
         song_id = self.execute(db_queries.create_song, (name, link, genre, group_id)).lastrowid
 
         for featuring_id in featuring:
@@ -280,16 +289,40 @@ class DBMuziek:
 
         return song_id
 
-    def update_song(self, song_id: int, link: str, genre: str, group_id: int):
-        return self.execute(db_queries.update_song, (link, genre, group_id, song_id))
+    def update_song(self, song_id: int, link: str, genre: str, group_id: int, featuring: List[int]):
+        """Updates the information stored for a song in the database.
+
+        :param song_id: Id of the song to update.
+        :param link: Link to the song in YouTube.
+        :param genre: Genre of the song.
+        :param group_id: Id of the author of the song.
+        :param featuring: List of id's for the groups featuring this song.
+        """
+        self.execute(db_queries.update_song, (link, genre, group_id, song_id))
+
+        self.execute(db_queries.delete_song_featuring, (song_id,))
+        for featuring_id in featuring:
+            self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
 
     def create_album(self, name: str, songs: List[int], group_id: int) -> int:
+        """Creates a new album in the database.
+
+        :param name: Name of the album.
+        :param songs: List of id's for the songs included in the album.
+        :param group_id: Id of the author of the album.
+        :return: The id of the album created.
+        """
         album_id = self.execute(db_queries.create_album, (name, group_id)).lastrowid
         for song_id in songs:
             self.execute(db_queries.add_song_album, (album_id, song_id))
         return album_id
 
     def update_album(self, album_id: int, songs: List[int]):
+        """Updates the information stored for an album in the database.
+
+        :param album_id: Id of the album to update.
+        :param songs: List of id's for the songs included in the album.
+        """
         self.execute(db_queries.delete_album_songs, (album_id,))
         for song_id in songs:
             self.execute(db_queries.add_song_album, (album_id, song_id))

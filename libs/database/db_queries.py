@@ -90,7 +90,7 @@ SELECT count(song_id)
 get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
 
 get_song = '''
-SELECT s.song_id, s.name as song_name, g.name as group_name, link
+SELECT s.song_id, s.name as song_name, g.name as group_name, link, genre
     FROM songs as s
         LEFT JOIN groups g on s.group_id = g.group_id
     WHERE s.name = ?;
@@ -166,3 +166,6 @@ SELECT s.song_id, s.name, s.duration, g.name
 get_setting = "SELECT value FROM settings WHERE key = ?;"
 
 set_setting = "INSERT OR REPLACE INTO settings(key, value) VALUES (?, ?);"
+
+delete_song_featuring = "DELETE FROM songFeaturing WHERE song_id = ?;"
+
