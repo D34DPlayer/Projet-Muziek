@@ -168,4 +168,3 @@ get_setting = "SELECT value FROM settings WHERE key = ?;"
 set_setting = "INSERT OR REPLACE INTO settings(key, value) VALUES (?, ?);"
 
 delete_song_featuring = "DELETE FROM songFeaturing WHERE song_id = ?;"
-
