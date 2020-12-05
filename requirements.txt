@@ -1,3 +1,4 @@
 docopt
 youtube_dl
 music-tag
+pytest

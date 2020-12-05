@@ -105,30 +105,30 @@ class DBMuziek:
         """Checks if the expected tables exist in the database and creates them if they don't.
 
         :author: Carlos
+        :return: False if any table needed to be created, True otherwise.
         """
+        tables = (
+            "groups",
+            "songs",
+            "songFeaturing",
+            "playlists",
+            "playlistSongs",
+            "albums",
+            "albumSongs",
+            "settings"
+        )
+
+        output = True
+
         if not self.foreign_keys():
             self.execute(db_queries.foreign_keys_enable)
 
-        if not self.table_exists('groups'):
-            self.execute(db_queries.create_groups)
+        for table in tables:
+            if not self.table_exists(table):
+                self.execute(getattr(db_queries, f"create_{table}"))
+                output = False
 
-        if not self.table_exists('songs'):
-            self.execute(db_queries.create_songs)
-        if not self.table_exists('songFeaturing'):
-            self.execute(db_queries.create_songFeaturing)
-
-        if not self.table_exists('playlists'):
-            self.execute(db_queries.create_playlists)
-        if not self.table_exists('playlistSongs'):
-            self.execute(db_queries.create_playlistSongs)
-
-        if not self.table_exists('albums'):
-            self.execute(db_queries.create_albums)
-        if not self.table_exists('albumSongs'):
-            self.execute(db_queries.create_albumSongs)
-
-        if not self.table_exists('settings'):
-            self.execute(db_queries.create_settings)
+        return output
 
     def table_exists(self, name: str) -> int:
         """Checks if a table exist in the database.

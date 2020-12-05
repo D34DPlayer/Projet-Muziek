@@ -78,7 +78,7 @@ class SongDownloader(youtube_dl.YoutubeDL):
         :return: True if the song has already been downloaded, False otherwise.
         """
         download_folder = os.path.join(self._config["download_dir"], str(song_id))
-        return os.path.isdir(download_folder) and os.listdir(download_folder)
+        return os.path.isdir(download_folder) and bool(os.listdir(download_folder))
 
     def delete_song(self, song_id: int):
         """Deletes a song (if it has been downloaded) from the local storage.
