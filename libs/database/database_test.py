@@ -19,4 +19,3 @@ def test_database():
     db.disconnect()
 
     os.remove("./temp.db")
-
