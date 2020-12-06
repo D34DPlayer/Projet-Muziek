@@ -1,4 +1,4 @@
-name: Linting with flake8
+name: Linting with flake8 and testing with pytest
 
 on: [push, pull_request]
 
@@ -22,3 +22,6 @@ jobs:
       - name: Lint with flake8
         run: |
           flake8 --count --statistics
+      - name: Test with pytest
+        run: |
+          pytest
