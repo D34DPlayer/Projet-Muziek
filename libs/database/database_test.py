@@ -1,6 +1,6 @@
 from . import DBMuziek
 import os
-import pytest
+# import pytest
 
 
 def test_database():
@@ -16,7 +16,6 @@ def test_database():
     assert db.validate_tables() is True
 
     # DATABASE END
-
     db.disconnect()
 
     os.remove("./temp.db")
