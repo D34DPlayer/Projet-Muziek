@@ -13,6 +13,28 @@ URL_PLAYLISTS = 'https://www.googleapis.com/youtube/v3/playlists'
 URL_PLAYLIST_ITEMS = 'https://www.googleapis.com/youtube/v3/playlistItems'
 
 
+class PlaylistItem:
+    def __init__(self, token: Token, **kwargs):
+        kind = kwargs.get('kind', '')
+        if kind != 'youtube#playlistItem':
+            raise ValueError(f"Expected kind 'youtube#playlistItem' but got {kind!r} instead.")
+
+        self._token = token
+        self._title = kwargs['snippet']['title']
+        self._id = kwargs['snippet']['resourceId']['videoId']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def id(self) -> str:
+        return self._id
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+
 class Playlist:
     def __init__(self, token: Token, **kwargs):
         kind = kwargs.get('kind', '')
@@ -52,13 +74,13 @@ class Playlist:
             params = dict(part='snippet', playlistId=self.id, maxResults=50)
             with requests.get(URL_PLAYLIST_ITEMS, params=params, headers=self._token.headers) as r:
                 data = r.json()
-                self._songs = [item for item in data['items']]
+                self._songs = [PlaylistItem(self._token, **item) for item in data['items']]
 
             while data.get('nextPageToken') is not None:
                 params['pageToken'] = data['nextPageToken']
                 with requests.get(URL_PLAYLIST_ITEMS, params=params, headers=self._token.headers) as r:
                     data = r.json()
-                    self._songs = [item for item in data['items']]
+                    self._songs = [PlaylistItem(self._token, **item) for item in data['items']]
 
         return self._songs
 
