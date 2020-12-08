@@ -15,6 +15,10 @@ def test_downloader():
     with pytest.raises(ValueError):
         downloader.download_song({})
 
+    # GET ITEM WITHOUT FETCH
+
+    assert downloader["title"] is None
+
     # SONG FETCH
     right_url = "https://www.youtube.com/watch?v=f1N5lZw7e78"
     fake_url = "https://www.youtube.com/watch?v=dQw4w9W"
@@ -23,6 +27,10 @@ def test_downloader():
     video_info = downloader.fetch_song(right_url)
     assert video_info is not None
     assert video_info["title"] == "Slow Clap - Meme"
+
+    # GET ITEM
+
+    assert video_info["title"] == downloader["title"]
 
     # SONG DOWNLOAD
     song_data = {
@@ -60,6 +68,11 @@ def test_downloader():
 
     assert downloader.is_downloaded(song_data["song_id"]) is True
     assert downloader.is_downloaded(song_data["song_id"] + 2) is False
+
+    # GET SONG PATH
+
+    assert downloader.get_song_path(song_data["song_id"]) == song_path
+    assert downloader.get_song_path(song_data["song_id"] + 2) is None
 
     # SONG DELETE
 

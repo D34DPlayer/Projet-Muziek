@@ -54,6 +54,7 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param song_data: The information about the song stored in the database.
+        :raises ValueError if there hasn't been a fetch_song before.
         """
         if not self._video_info:
             raise ValueError("A video needs to be fetched before it can be downloaded.")
@@ -86,10 +87,9 @@ class SongDownloader(youtube_dl.YoutubeDL):
         :author: Carlos
         :param song_id: The id of the song to delete.
         """
-        download_folder = os.path.join(self._config["download_dir"], str(song_id))
-        if self.is_downloaded(song_id):
-            for file in os.listdir(download_folder):
-                os.remove(os.path.join(download_folder, file))
+        song_path = self.get_song_path(song_id)
+        if song_path:
+            os.remove(song_path)
 
     def update_metadata(self, song_data):
         """Updates the metadata of the stored MP3 (if it exists) to fit the information stored in the database.
@@ -97,14 +97,38 @@ class SongDownloader(youtube_dl.YoutubeDL):
         :author: Carlos
         :param song_data: The information about the song stored in the database.
         """
-        if not self.is_downloaded(song_data["song_id"]):
-            return
+        song_path = self.get_song_path(song_data["song_id"])
 
-        download_folder = os.path.join(self._config["download_dir"], str(song_data["song_id"]))
+        if song_path:
+            f = music_tag.load_file(song_path)
+            f['artist'] = song_data["group_name"]
+            f['genre'] = song_data["genre"]
+            f['tracktitle'] = song_data["song_name"]
+            f.save()
 
-        song_name = os.listdir(download_folder)[0]
-        f = music_tag.load_file(os.path.join(download_folder, song_name))
-        f['artist'] = song_data["group_name"]
-        f['genre'] = song_data["genre"]
-        f['tracktitle'] = song_data["song_name"]
-        f.save()
+    def get_song_path(self, song_id):
+        """Returns the path where the song has been downloaded.
+
+        :author: Carlos
+        :param song_id: The if of the song to look up.
+        :return: The path if the song has been downlaoded, None otherwise
+        """
+        if not self.is_downloaded(song_id):
+            return None
+        else:
+            download_folder = os.path.join(self._config["download_dir"], str(song_id))
+            song_name = os.listdir(download_folder)[0]
+
+            return os.path.join(download_folder, song_name)
+
+    def __getitem__(self, item):
+        """Returns the item contained in the underlying video_data.
+
+        :author: Carlos
+        :param item: the key to the item to get.
+        :return: None if no video has been fetched, the item from the video_info otherwise.
+        """
+        if not self._video_info:
+            return None
+        else:
+            return self._video_info[item]
