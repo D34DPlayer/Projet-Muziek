@@ -90,30 +90,37 @@ SELECT count(song_id)
 get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
 
 get_song = '''
-SELECT s.song_id, s.name as song_name, g.name as group_name, link, genre
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM songs as s
         LEFT JOIN groups g on s.group_id = g.group_id
-    WHERE s.name = ?;
+    WHERE lower(s.name) = lower(?);
+'''
+
+get_song_with_group = '''
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
+    FROM songs as s
+        LEFT JOIN groups g on s.group_id = g.group_id
+    WHERE lower(s.name) = lower(?) and g.group_id = ?;
 '''
 
 get_songs = '''
-SELECT s.song_id, s.name, s.duration, g.name
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM songs as s
         LEFT JOIN groups as g ON s.group_id = g.group_id
 '''
 
-append_genre = "genre = ?"
+append_genre = "lower(genre) = lower(?)"
 
-append_name = "s.name LIKE ?"
+append_name = "lower(s.name) LIKE lower(?)"
 
-append_group = "g.name LIKE ?"
+append_group = "lower(g.name) LIKE lower(?)"
 
 paging = "LIMIT ? OFFSET ?"
 
 get_group = '''
-SELECT group_id, members, (select count(song_id) from songs where songs.group_id == groups.group_id)
+SELECT group_id, members, name as group_name
     FROM groups
-    WHERE name = ?;
+    WHERE lower(name) = lower(?);
 '''
 
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
@@ -132,15 +139,15 @@ create_group = "INSERT INTO groups(name, members) VALUES (?, ?);"
 
 update_group = "UPDATE groups SET members = ? where group_id = ?;"
 
-create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?);"
+create_song = "INSERT INTO songs(name, link, genre, group_id, duration) VALUES (?, ?, ?, ?, ?);"
 
-update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
+update_song = "UPDATE songs SET link = ?, genre = ?, duration = ? where song_id = ?;"
 
 get_album = '''
 SELECT album_id, a.group_id as group_id, g.name as group_name
     FROM albums as a
         LEFT JOIN groups as g on a.group_id = g.group_id
-    WHERE a.name = ?;
+    WHERE lower(a.name) = lower(?);
 '''
 
 create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"

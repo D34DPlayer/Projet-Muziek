@@ -120,3 +120,29 @@ def pagination(total: int, page: int) -> int:
         return page
 
     return -1
+
+
+def choose_song(song_query):
+    """If multiple songs have the same name, asks the user which one should be used.
+
+    :author: Carlos
+    :param song_query: A list of songs to choose from.
+    :return: The song chosen by the user.
+    """
+
+    if not song_query:
+        return song_query
+
+    if len(song_query) == 1:
+        return song_query[0]
+    else:
+        groups = [s["group_name"] for s in song_query]
+        print(f"{len(song_query)} songs where found with that name from the groups:")
+
+        counter = 1
+        for group in groups:
+            print(f" {counter} : {group}")
+            counter += 1
+        number = question_choice("Choose one", [str(i + 1) for i in range(len(groups))])
+
+        return song_query[int(number) - 1]

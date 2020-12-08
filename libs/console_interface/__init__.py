@@ -28,8 +28,19 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
     if not name:
         name = utils.question("Name")
 
+    if not group_id:
+        group = utils.question("Group")
+
+        if not (group_query := db.get_group(group)):
+            reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?',
+                                          ['y', 'n'])
+            if reply == 'n' or not (group_id := add_group(db, group)):
+                return None
+        else:
+            group_id = group_query["group_id"]
+
     update = 'n'
-    if song := db.get_song(name):
+    if song := db.get_song(name, group_id):
         update = utils.question_choice(f'The song "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
             return song["song_id"]
@@ -43,17 +54,6 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             link = ""
 
     genre = utils.question("Genre", song["genre"] if song else None)
-
-    if not group_id:
-        group = utils.question("Group", song["group_name"] if song else None)
-
-        if not (group_query := db.get_group(group)):
-            reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?',
-                                          ['y', 'n'])
-            if reply == 'n' or not (group_id := add_group(db, group)):
-                return None
-        else:
-            group_id = group_query["group_id"]
 
     featuring = []
     while True:
@@ -72,7 +72,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
 
     with db.connection:
         if update == 'y':
-            db.update_song(song["song_id"], link, genre, group_id, featuring)
+            db.update_song(song["song_id"], link, genre, downloader['duration'], featuring)
             song_id = song["song_id"]
             logger.info(f"The song {name} has been updated.")
 
@@ -85,7 +85,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
                 download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
 
         else:
-            song_id = db.create_song(name, link, genre, group_id, featuring)
+            song_id = db.create_song(name, link, genre, downloader['duration'], group_id, featuring)
             logger.info(f"The song {name} has been added with the ID {song_id}.")
             download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
 
@@ -113,7 +113,7 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
 
     playlist_id, author = playlist
     for song_name in songs:
-        if not (song := db.get_song(song_name)):
+        if not (song := utils.choose_song(db.get_song(song_name))):
             reply = utils.question_choice(f'The song "{song_name}" doesn\'t. exist yet. Do you want to create it?',
                                           ['y', 'n'])
             if reply == 'n' or not (song_id := add_song(db, song_name)):
@@ -205,7 +205,7 @@ def add_album(db: DBMuziek, name: str = None):
             song = utils.question(f"Song {len(songs) + 1} ('Done' if there aren't any more)")
             if song == "Done":
                 break
-        if not (song_query := db.get_song(song)):
+        if not (song_query := db.get_song(song, group_id)):
             reply = utils.question_choice(f'The song "{song}" doesn\'t. exist yet. Do you want to create it?',
                                           ['y', 'n'])
             if reply == 'n' or not (song_id := add_song(db, song, group_id)):
@@ -339,7 +339,7 @@ def download_song(db: DBMuziek, name: str):
     """
     downloader = SongDownloader(logger)
 
-    if not (song_query := db.get_song(name)):
+    if not (song_query := utils.choose_song(db.get_song(name))):
         reply = utils.question_choice(f'The song "{name}" doesn\'t. exist yet. Do you want to create it?',
                                       ['y', 'n'])
         if reply == 'y':
