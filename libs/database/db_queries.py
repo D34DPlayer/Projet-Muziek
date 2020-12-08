@@ -89,6 +89,8 @@ SELECT count(song_id)
 
 get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
 
+get_playlists = "SELECT name, author FROM playlists;"
+
 get_song = '''
 SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM songs as s

@@ -330,6 +330,15 @@ def create_playlist(db: DBMuziek, name: str) -> (int, str):
     return playlist_id, author
 
 
+def list_playlists(db: DBMuziek):
+    playlists = db.get_playlists()
+
+    print(f"You have {len(playlists)} playlists:")
+
+    for playlist in playlists:
+        print(f" \"{playlist['name']}\" created by {playlist['author']}")
+
+
 def download_song(db: DBMuziek, name: str):
     """Downloads the song requested based on the url stored in the database.
 

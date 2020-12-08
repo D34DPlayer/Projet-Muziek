@@ -178,6 +178,13 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_playlist, (name,)).fetchone()
 
+    def get_playlists(self):
+        """Obtains a list with all the playlists created.
+
+        :return: A list with Rows
+        """
+        return self.execute(db_queries.get_playlists).fetchall()
+
     def get_song(self, song_name: str, group_id: Optional[str] = None):
         """Obtains a song from the database based on its name, and optionally its group name.
 
