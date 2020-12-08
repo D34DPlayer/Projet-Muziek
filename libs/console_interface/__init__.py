@@ -79,7 +79,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             if downloader.is_downloaded(song_id):
                 download = utils.question_choice("Do you want to redownload the song?", ['y', 'n'])
                 if download == 'n':
-                    downloader.update_metadata(db.get_song(name))
+                    downloader.update_metadata(db.get_song(name, group_id))
                     logger.info(f"The metadata of the local song {name} has been updated.")
             else:
                 download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
@@ -90,7 +90,7 @@ def add_song(db: DBMuziek, name: str = None, group_id: int = None):
             download = utils.question_choice("Do you want to download the song?", ['y', 'n'])
 
     if download == 'y':
-        downloader.download_song(db.get_song(name))
+        downloader.download_song(db.get_song(name, group_id))
         print("Download complete.")
         logger.info(f"The song {name} has been downloaded.")
     return song_id
