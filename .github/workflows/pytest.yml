@@ -1,9 +1,9 @@
-name: Testing with pytest
+name: Testing with pytest and coverage repport
 
 on: [push, pull_request]
 
 jobs:
-  lint:
+  run:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,7 +20,15 @@ jobs:
         run: |
           python -m pip install -U pip
           pip install pytest
+          pip install pytest-cov
           pip install -r requirements.txt
-      - name: Test with pytest
+      - name: Test with pytest with coverage
         run: |
-          pytest
+          pytest --cov=libs/ --cov-report=xm
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: pytest
+          env_vars: PYTHON
