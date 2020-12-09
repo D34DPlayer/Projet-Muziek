@@ -81,7 +81,8 @@ def test_downloader():
     assert os.path.exists(song_path) is False
     assert downloader.is_downloaded(song_data["song_id"]) is False
 
-    # DOWNLOADER END
+
+def test_downloader_cleanup():
     for folder in os.listdir("./test_songs"):
         for file in os.listdir(f"./test_songs/{folder}"):
             os.remove(f"./test_songs/{folder}/{file}")

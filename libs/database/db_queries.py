@@ -87,9 +87,9 @@ SELECT count(song_id)
         LEFT JOIN groups as g ON s.group_id = g.group_id
 '''
 
-get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
+get_playlist = "SELECT playlist_id, author, name as playlist_name FROM playlists WHERE lower(name) = lower(?);"
 
-get_playlists = "SELECT name, author FROM playlists;"
+get_playlists = "SELECT playlist_id, author, name as playlist_name FROM playlists;"
 
 get_song = '''
 SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
@@ -127,8 +127,8 @@ SELECT group_id, members, name as group_name
 
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
 
-get_playlist_data = '''
-SELECT s.name, s.duration, g.name
+get_playlist_songs = '''
+SELECT p.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM playlistSongs as p
         LEFT JOIN songs AS s ON s.song_id = p.song_id
         LEFT JOIN groups AS g ON g.group_id = s.group_id
@@ -146,10 +146,17 @@ create_song = "INSERT INTO songs(name, link, genre, group_id, duration) VALUES (
 update_song = "UPDATE songs SET link = ?, genre = ?, duration = ? where song_id = ?;"
 
 get_album = '''
-SELECT album_id, a.group_id as group_id, g.name as group_name
+SELECT album_id, a.group_id as group_id, g.name as group_name, a.name as album_name
     FROM albums as a
         LEFT JOIN groups as g on a.group_id = g.group_id
     WHERE lower(a.name) = lower(?);
+'''
+
+get_album_with_group = '''
+SELECT album_id, a.group_id as group_id, g.name as group_name, a.name as album_name
+    FROM albums as a
+        LEFT JOIN groups as g on a.group_id = g.group_id
+    WHERE lower(a.name) = lower(?) and g.group_id = ?;
 '''
 
 create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
@@ -165,7 +172,7 @@ count_group_songs = "SELECT COUNT(song_id) as count FROM songs WHERE group_id = 
 count_group_albums = "SELECT COUNT(album_id) as count FROM albums WHERE group_id = ?;"
 
 get_songs_album = '''
-SELECT s.song_id, s.name, s.duration, g.name
+SELECT a.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM albumSongs as a
         LEFT JOIN songs as s on a.song_id = s.song_id
         LEFT JOIN groups as g on s.group_id = g.group_id

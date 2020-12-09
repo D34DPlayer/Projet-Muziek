@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import logging
 
 from ..database import DBMuziek
@@ -14,7 +14,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def add_song(db: DBMuziek, name: str = None, group_id: int = None):
+def add_song(db: DBMuziek, name: Optional[str] = None, group_id: Optional[int] = None):
     """Add a song to the database and ask the user for the needed info.
         There's also the option to modify a song that already exists in the database,
         and to create the group if it doesn't exist yet.
@@ -111,7 +111,7 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
             playlist = create_playlist(db, name)
             print(f'The playlist "{name}" has been successfully created.')
 
-    playlist_id, author = playlist
+    playlist_id, author, playlist_name = playlist
     for song_name in songs:
         if not (song := utils.choose_song(db.get_song(song_name))):
             reply = utils.question_choice(f'The song "{song_name}" doesn\'t. exist yet. Do you want to create it?',
@@ -127,7 +127,7 @@ def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
             logger.info(f'The song "{song_name}" has been successfully added to the playlist "{name}".')
 
 
-def add_group(db: DBMuziek, name: str = None):
+def add_group(db: DBMuziek, name: Optional[str] = None):
     """Add a group to the database and ask the user for the needed info.
     There's also the option to modify a group that already exists in the database.
 
@@ -167,7 +167,7 @@ def add_group(db: DBMuziek, name: str = None):
     return group_id
 
 
-def add_album(db: DBMuziek, name: str = None):
+def add_album(db: DBMuziek, name: Optional[str] = None):
     """Add an album to the database and ask the user for the needed info.
         There's also the option to modify an album that already exists in the database,
         and to create the group and songs if they don't exist yet.
@@ -180,22 +180,21 @@ def add_album(db: DBMuziek, name: str = None):
     if not name:
         name = utils.question("Name")
 
+    group = utils.question("Group")
+
     update = 'n'
-    if album := db.get_album(name):
+    if not (group_query := db.get_group(group)):
+        reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?',
+                                      ['y', 'n'])
+        if reply == 'n' or not (group_id := add_group(db, group)):
+            return None
+    else:
+        group_id = group_query[0]
+
+    if album := db.get_album(name, group_id):
         update = utils.question_choice(f'The album "{name}" already exists. Do you want to update it?', ['y', 'n'])
         if update == 'n':
             return album["album_id"]
-        else:
-            group_id = album["group_id"]
-    else:
-        group = utils.question("Group")
-        if not (group_query := db.get_group(group)):
-            reply = utils.question_choice(f'The group "{group}" doesn\'t. exist yet. Do you want to create it?',
-                                          ['y', 'n'])
-            if reply == 'n' or not (group_id := add_group(db, group)):
-                return None
-        else:
-            group_id = group_query[0]
 
     songs = []
     while True:
@@ -275,7 +274,7 @@ def list_album(db: DBMuziek, name: str):
     :param db: The database used.
     :param name: The name of the album.
     """
-    if not (album_query := db.get_album(name, True)):
+    if not (album_query := utils.choose_album(db.get_album(name))):
         reply = utils.question_choice(f'The album "{name}" doesn\'t. exist yet. Do you want to create it?',
                                       ['y', 'n'])
         if reply == 'y':
@@ -283,14 +282,16 @@ def list_album(db: DBMuziek, name: str):
         else:
             return None
 
+    album_songs = db.get_album_songs(album_query["album_id"])
+
     utils.print_underline('Album information:', style='=')
 
     print(f'''    Name: {name}
-    Group: {album_query[0]["group_name"]}
+    Group: {album_query["group_name"]}
     ''')
 
     utils.print_underline('Songs:', style='=')
-    utils.display_songs(album_query[1])
+    utils.display_songs(album_songs)
 
 
 def list_playlist(db: DBMuziek, name: str):
@@ -307,8 +308,8 @@ def list_playlist(db: DBMuziek, name: str):
             print(f'The playlist "{name}" has been successfully created.')
             logger.info(f'The playlist "{name}" has been successfully created.')
 
-    playlist_id, author = playlist
-    utils.print_underline(f'Playlist "{name}" by [{author}] :', style='=')
+    playlist_id, author, playlist_name = playlist
+    utils.print_underline(f'Playlist "{playlist_name}" by [{author}] :', style='=')
 
     songs = db.get_playlist_songs(playlist_id)
     utils.display_songs(songs)

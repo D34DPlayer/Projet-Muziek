@@ -122,27 +122,37 @@ def pagination(total: int, page: int) -> int:
     return -1
 
 
-def choose_song(song_query):
-    """If multiple songs have the same name, asks the user which one should be used.
+def _choose(query, _type: str, item: str):
+    """If multiple "type" have the same name, asks the user which one should be used.
 
     :author: Carlos
-    :param song_query: A list of songs to choose from.
+    :param query: A list of "type" to choose from.
+    :param _type: What are we handling.
+    :param item: The item that should be used to choose.
     :return: The song chosen by the user.
     """
 
-    if not song_query:
-        return song_query
+    if not query:
+        return query
 
-    if len(song_query) == 1:
-        return song_query[0]
+    if len(query) == 1:
+        return query[0]
     else:
-        groups = [s["group_name"] for s in song_query]
-        print(f"{len(song_query)} songs where found with that name from the groups:")
+        values = [s[item] for s in query]
+        print(f"{len(query)} {_type} were found with that name from the groups:")
 
         counter = 1
-        for group in groups:
-            print(f" {counter} : {group}")
+        for value in values:
+            print(f" {counter} : {value}")
             counter += 1
-        number = question_choice("Choose one", [str(i + 1) for i in range(len(groups))])
+        number = question_choice("Choose one", [str(en[0]) for en in enumerate(values, 1)])
 
-        return song_query[int(number) - 1]
+        return query[int(number) - 1]
+
+
+def choose_album(album_query):
+    return _choose(album_query, "albums", "group_name")
+
+
+def choose_song(song_query):
+    return _choose(song_query, "songs", "group_name")

@@ -238,21 +238,26 @@ class DBMuziek:
             albums = self.execute(db_queries.count_group_albums, (group_query["group_id"],)).fetchone()["count"]
             return group_query, songs, albums
 
-    def get_album(self, name: str, verbose: bool = False):
-        """Obtains an album from the database based on its name,
-        will return even more info about it if requested.
+    def get_album(self, name: str, group_id: Optional[int] = None):
+        """Obtains an album from the database based on its name.
 
         :param name: The name of the album.
-        :param verbose: If more info should be provided.
-        :return: A Row if the song exists, None if it doesn't.
-                 If verbose a list of Rows with the songs in the album will be also provided.
+        :param group_id: The id of the group, optional
+        :return: A Row if the album exists and the group is provided, None if it doesn't.
+                 If no group is provided a list of Rows.
         """
-        album_query = self.execute(db_queries.get_album, (name,)).fetchone()
-        if not verbose:
-            return album_query
-        elif album_query:
-            songs = self.execute(db_queries.get_songs_album, (album_query["album_id"],)).fetchall()
-            return album_query, songs
+        if group_id:
+            return self.execute(db_queries.get_album_with_group, (name, group_id)).fetchone()
+        else:
+            return self.execute(db_queries.get_album, (name,)).fetchall()
+
+    def get_album_songs(self, album_id: int):
+        """Obtains a list with all the songs an album contains.
+
+        :param album_id: The id of the album.
+        :return: A list of Rows with songs.
+        """
+        return self.execute(db_queries.get_songs_album, (album_id,)).fetchall()
 
     def add_song_playlist(self, playlist_id: int, song_id: int):
         """Adds an existing song to an existing playlist.
@@ -269,7 +274,7 @@ class DBMuziek:
         :param playlist_id: The id of the playlist.
         :return: A list of Rows with the songs in the playlist.
         """
-        return self.execute(db_queries.get_playlist_data, (playlist_id,)).fetchall()
+        return self.execute(db_queries.get_playlist_songs, (playlist_id,)).fetchall()
 
     def create_playlist(self, name: str, author: str) -> int:
         """Creates a new playlist in the database.

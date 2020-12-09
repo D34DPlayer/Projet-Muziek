@@ -59,10 +59,12 @@ def test_database():
         "name": "TestSong",
         "link": "test.link",
         "genre": "Genre",
-        "duration": 69
+        "duration": 69,
+        "group_id": group_data["id"],
+        "featuring": [featuring_id]
     }
 
-    song_data["id"] = db.create_song(**song_data, group_id=group_data["id"], featuring=[featuring_id])
+    song_data["id"] = db.create_song(**song_data)
     db.commit()
     song_data_bis = db.get_song(song_data["name"], group_data["id"])
     song_data_upper = db.get_song(song_data["name"].upper())
@@ -80,7 +82,7 @@ def test_database():
     assert len(db.get_song("FakeSong")) == 0
 
     # UPDATE SONG
-    db.update_song(song_data["id"], song_data["link"], "OtherGenre", 420, [featuring_id])
+    db.update_song(song_data["id"], song_data["link"], "OtherGenre", 420, song_data["featuring"])
     db.commit()
     song_data_bis = db.get_song(song_data["name"], group_data["id"])
 
@@ -112,17 +114,94 @@ def test_database():
     assert len(db.get_songs({"genre": "OthErGenRE", "group": "tGro"})) == 1
     assert len(db.get_songs({"genre": "OtherGEnRE", "name": "songg"})) == 0
 
-    # TODO: CREATE ALBUM AND GET ALBUM
+    # CREATE ALBUM AND GET ALBUM
+    album_data = {
+        "name": "TestAlbum",
+        "songs": [song_data["id"]],
+        "group_id": group_data["id"]
+    }
 
-    # TODO: UPDATE ALBUM
+    album_data["id"] = db.create_album(**album_data)
+    db.commit()
+    album_data_bis = db.get_album(album_data["name"], album_data["group_id"])
+    album_data_upper = db.get_album(album_data["name"].upper())
 
-    # TODO: CREATE PLAYLIST AND GET PLAYLIST
+    assert album_data_bis["album_name"] == album_data["name"]
+    assert album_data_bis["album_id"] == album_data["id"]
+    assert album_data_bis["group_id"] == album_data["group_id"]
+    assert album_data_bis["group_name"] == group_data["name"]
 
-    # TODO: ADD SONG PLAYLIST
+    assert len(album_data_upper) == 1
+    assert album_data_upper[0]["album_name"] == album_data["name"]
 
-    # TODO: GET PLAYLIST SONGS
+    # GET ALBUM SONGS
+    album_songs = db.get_album_songs(album_data["id"])
+
+    assert len(album_songs) == 1
+    assert album_songs[0]["song_id"] == song_data["id"]
+    assert album_songs[0]["song_name"] == song_data["name"]
+    assert album_songs[0]["duration"] == 420
+    assert album_songs[0]["group_name"] == group_data["name"]
+    assert album_songs[0]["link"] == song_data["link"]
+    assert album_songs[0]["genre"] == "OtherGenre"
+
+    # UPDATE ALBUM
+    other_song_data = {
+        "name": "TestSong2",
+        "link": "test.link.2",
+        "genre": "Genre",
+        "duration": 69,
+        "group_id": group_data["id"],
+        "featuring": []
+    }
+
+    other_song_id = db.create_song(**other_song_data)
+
+    db.update_album(album_data["id"], [song_data["id"], other_song_id])
+
+    other_album_songs = db.get_album_songs(album_data["id"])
+
+    assert len(other_album_songs) == 2
+    assert other_album_songs[0]["duration"] == 420
+    assert other_album_songs[1]["duration"] == 69
+
+    # CREATE PLAYLIST AND GET PLAYLIST(S)
+    playlist_data = {
+        "name": "TestPlaylist",
+        "author": "Joe"
+    }
+
+    assert len(db.get_playlists()) == 0
+    playlist_data["id"] = db.create_playlist(**playlist_data)
+    db.commit()
+    playlists = db.get_playlists()
+    playlist = db.get_playlist(playlist_data["name"].upper())
+
+    assert len(playlists) == 1
+    assert playlists[0]["playlist_name"] == playlist_data["name"]
+
+    assert playlist["playlist_name"] == playlist_data["name"]
+    assert playlist["author"] == playlist_data["author"]
+    assert playlist["playlist_id"] == playlist_data["id"]
+
+    # ADD SONG PLAYLIST AND GET PLAYLIST SONGS
+    db.add_song_playlist(playlist_data["id"], song_data['id'])
+    db.add_song_playlist(playlist_data["id"], other_song_id)
+    db.commit()
+    playlist_songs = db.get_playlist_songs(playlist_data["id"])
+
+    assert playlist_songs[0]["song_id"] == song_data["id"]
+    assert playlist_songs[0]["song_name"] == song_data["name"]
+    assert playlist_songs[0]["link"] == song_data["link"]
+    assert playlist_songs[0]["genre"] == "OtherGenre"
+
+    assert playlist_songs[1]["song_id"] == other_song_id
 
     # DATABASE END
     db.disconnect()
 
+    assert db.connection is None
+
+
+def test_database_cleanup():
     os.remove("./temp.db")
