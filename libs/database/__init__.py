@@ -197,6 +197,14 @@ class DBMuziek:
         else:
             return self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
 
+    def get_song_featuring(self, song_id: int):
+        """Obtains the groups featured in a song.
+
+        :param song_id: The id of the song.
+        :return: Returns a list of Rows with the groups featured in the song.
+        """
+        return self.execute(db_queries.get_song_featuring, (song_id,)).fetchall()
+
     def get_songs(self, filters: dict = None, offset: int = 0, limit: int = 50):
         """Obtains a defined amount of songs, after being filtered.
 
@@ -219,7 +227,12 @@ class DBMuziek:
         group = (db_queries.append_group, fuzy(default["group"]))
         query, params = query_append(db_queries.get_songs, db_queries.paging, genre, name, group)
 
-        return self.execute(query, (*params, limit, offset)).fetchall()
+        songs = list(map(dict, self.execute(query, (*params, limit, offset)).fetchall()))
+
+        for song in songs:
+            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+
+        return songs
 
     def get_group(self, name: str, verbose: bool = False):
         """Obtains a group from the database based on its name,
@@ -257,7 +270,12 @@ class DBMuziek:
         :param album_id: The id of the album.
         :return: A list of Rows with songs.
         """
-        return self.execute(db_queries.get_songs_album, (album_id,)).fetchall()
+        songs = list(map(dict, self.execute(db_queries.get_songs_album, (album_id,)).fetchall()))
+
+        for song in songs:
+            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+
+        return songs
 
     def add_song_playlist(self, playlist_id: int, song_id: int):
         """Adds an existing song to an existing playlist.
@@ -274,7 +292,12 @@ class DBMuziek:
         :param playlist_id: The id of the playlist.
         :return: A list of Rows with the songs in the playlist.
         """
-        return self.execute(db_queries.get_playlist_songs, (playlist_id,)).fetchall()
+        songs = list(map(dict, self.execute(db_queries.get_playlist_songs, (playlist_id,)).fetchall()))
+
+        for song in songs:
+            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+
+        return songs
 
     def create_playlist(self, name: str, author: str) -> int:
         """Creates a new playlist in the database.
@@ -299,9 +322,8 @@ class DBMuziek:
 
         :param group_id: The id of group to update.
         :param members: The members of the group.
-        :return: A database cursor.
         """
-        return self.execute(db_queries.update_group, (','.join(members), group_id))
+        self.execute(db_queries.update_group, (','.join(members), group_id))
 
     def create_song(self, name: str, link: str, genre: str,
                     duration: int, group_id: int, featuring: List[int]) -> int:
@@ -312,8 +334,8 @@ class DBMuziek:
         :param genre: Genre of the song.
         :param duration: Duration of the song.
         :param group_id: Id of the author of the song.
-        :param featuring: List of id's for the groups featuring this song.
-        :return: Id o the song created.
+        :param featuring: List of id's for the groups featured in this song.
+        :return: Id of the song created.
         """
         song_id = self.execute(db_queries.create_song, (name, link, genre, group_id, duration)).lastrowid
 
@@ -362,6 +384,12 @@ class DBMuziek:
             self.execute(db_queries.add_song_album, (album_id, song_id))
 
     def get_setting(self, key: str, default: str = None) -> str:
+        """Returns a stored setting value if it has been saved.
+
+        :param key: The key to find the value.
+        :param default: The default value.
+        :return: The value if it's found, the default one otherwise.
+        """
         value = self.execute(db_queries.get_setting, (key,)).fetchone()
         if value is None:
             return default
@@ -369,4 +397,9 @@ class DBMuziek:
         return value["value"]
 
     def set_setting(self, key: str, value: str):
+        """Stores a setting value in the database.
+
+        :param key: The key to stored the value under.
+        :param value: The value to store.
+        """
         self.execute(db_queries.set_setting, (key, str(value)))

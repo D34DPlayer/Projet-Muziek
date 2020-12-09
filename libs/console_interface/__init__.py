@@ -315,20 +315,22 @@ def list_playlist(db: DBMuziek, name: str):
     utils.display_songs(songs)
 
 
-def create_playlist(db: DBMuziek, name: str) -> (int, str):
+def create_playlist(db: DBMuziek, name: str, author: Optional[str] = None) -> (int, str):
     """Create a playlist in the database and return its id and author.
         Does not commit the transaction.
 
     :author: Mathieu
     :param db: The database used.
     :param name: The playlist's name.
+    :param author: The author, optional.
     :return: The playlist's id and its author.
     """
-    author = utils.getuser()
+    if not author:
+        author = utils.getuser()
 
     playlist_id = db.create_playlist(name, author)
 
-    return playlist_id, author
+    return playlist_id, author, name
 
 
 def list_playlists(db: DBMuziek):
@@ -337,7 +339,7 @@ def list_playlists(db: DBMuziek):
     print(f"You have {len(playlists)} playlists:")
 
     for playlist in playlists:
-        print(f" \"{playlist['name']}\" created by {playlist['author']}")
+        print(f" \"{playlist['playlist_name']}\" created by {playlist['author']}")
 
 
 def download_song(db: DBMuziek, name: str):
@@ -379,3 +381,98 @@ def download_song(db: DBMuziek, name: str):
 
     print("Download complete.")
     logger.info(f'The song {name} has been downloaded.')
+
+
+def import_playlist(db: DBMuziek, name: str):
+    if db.get_playlist(name):
+        print(f"The playlist {name} already exists.")
+        return
+
+    buffer = utils.question("Playlist export code")
+
+    buffer = utils.decode(buffer)
+
+    with db.connection:
+        for group in buffer["groups"]:
+            if not db.get_group(group["name"]):
+                db.create_group(group["name"], group["members"])
+
+        songs = []
+
+        for song in buffer["songs"]:
+            group_query = db.get_group(song["group_name"])
+            if not (song_query := db.get_song(song["song_name"], group_query["group_id"])):
+                featuring = [db.get_group(n) for n in song["featuring"]]
+                song_id = db.create_song(song["song_name"], song["link"], song["genre"],
+                                         song["duration"], group_query["group_id"], featuring)
+            else:
+                song_id = song_query["song_id"]
+            songs.append(song_id)
+
+        playlist_id, *other = create_playlist(db, name, buffer["playlist"]["author"])
+
+        for song_id in songs:
+            db.add_song_playlist(playlist_id, song_id)
+
+    print(f"The playlist {name} has been successfully imported.")
+    logger.info(f"The playlist {name} has been successfully imported.")
+
+
+def export_playlist(db: DBMuziek, name: str):
+    buffer = {
+        "groups": [],
+        "songs": [],
+        "playlist": {}
+    }
+
+    groups = []
+
+    if not (playlist_query := db.get_playlist(name)):
+        print(f"The playlist {name} doesn't exist yet, create it and add songs to it.")
+        return None
+
+    playlist_songs = db.get_playlist_songs(playlist_query['playlist_id'])
+
+    if len(playlist_songs) == 0:
+        print(f"The playlist {name} is empty, nothing will be exported.")
+        return None
+
+    for song in playlist_songs:
+        if song["group_id"] not in groups:
+            groups.append(song["group_id"])
+
+            group = db.get_group(song["group_name"])
+            buffer["groups"].append({
+                "name": group["group_name"],
+                "members": group["members"].split(",")
+            })
+
+        featured_groups = db.get_song_featuring(song["song_id"])
+
+        for featured_group in featured_groups:
+            if featured_group["group_id"] not in groups:
+                groups.append(featured_group["group_id"])
+
+                group = db.get_group(featured_group["group_name"])
+                buffer["groups"].append({
+                    "name": group["group_name"],
+                    "members": group["members"].split(",")
+                })
+
+        buffer["songs"].append({
+            "group_name": song["group_name"],
+            "song_name": song["song_name"],
+            "link": song["link"],
+            "genre": song["genre"],
+            "duration": song["duration"],
+            "featuring": [f["group_name"] for f in featured_groups]
+        })
+
+    buffer["playlist"] = {
+        "author": playlist_query["author"]
+    }
+
+    buffer = utils.encode(buffer)
+
+    print(f"Share this text to share the playlist:\n {buffer}")
+    logger.info(f"The playlist {name} has been successfully exported.")

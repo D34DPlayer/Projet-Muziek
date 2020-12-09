@@ -81,6 +81,14 @@ def test_database():
 
     assert len(db.get_song("FakeSong")) == 0
 
+    # GET SONG FEATURING
+    featuring = db.get_song_featuring(song_data["id"])
+
+    assert len(featuring) == 1
+    assert featuring[0]["group_name"] == "FeatGroup"
+    assert featuring[0]["members"] == "Member3"
+    assert featuring[0]["group_id"] == featuring_id
+
     # UPDATE SONG
     db.update_song(song_data["id"], song_data["link"], "OtherGenre", 420, song_data["featuring"])
     db.commit()
@@ -94,7 +102,6 @@ def test_database():
     assert song_data_bis["genre"] == "OtherGenre"
 
     # COUNT SONGS
-
     assert db.count_songs() == 1
     assert db.count_songs({"genre": "OtherGenRE"}) == 1
     assert db.count_songs({"name": "TestSonG"}) == 1
@@ -104,7 +111,6 @@ def test_database():
     assert db.count_songs({"genre": "otherGenRE", "name": "songg"}) == 0
 
     # GET SONGS
-
     assert len(db.get_songs()) == 1
     assert db.get_songs()[0]["song_name"] == song_data["name"]
     assert len(db.get_songs({"genre": "OtherGenRE"})) == 1
@@ -199,6 +205,13 @@ def test_database():
 
     # DATABASE END
     db.disconnect()
+
+    assert db.connection is None
+
+    # DB CONTEXT MANAGER
+    with db:
+        assert db.connection is not None
+        db.get_song(song_data["name"])
 
     assert db.connection is None
 

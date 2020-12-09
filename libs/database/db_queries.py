@@ -128,7 +128,7 @@ SELECT group_id, members, name as group_name
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
 
 get_playlist_songs = '''
-SELECT p.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre
+SELECT p.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
     FROM playlistSongs as p
         LEFT JOIN songs AS s ON s.song_id = p.song_id
         LEFT JOIN groups AS g ON g.group_id = s.group_id
@@ -184,3 +184,10 @@ get_setting = "SELECT value FROM settings WHERE key = ?;"
 set_setting = "INSERT OR REPLACE INTO settings(key, value) VALUES (?, ?);"
 
 delete_song_featuring = "DELETE FROM songFeaturing WHERE song_id = ?;"
+
+get_song_featuring = """
+SELECT f.group_id as group_id, g.name as group_name, members
+    FROM songFeaturing as f
+        LEFT JOIN groups as g on f.group_id = g.group_id
+    WHERE f.song_id = ?;
+"""

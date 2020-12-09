@@ -1,6 +1,9 @@
 import math
 import getpass
-from typing import List
+import json
+import base64
+import zlib
+from typing import List, Dict, Any
 
 getuser = getpass.getuser
 
@@ -19,34 +22,35 @@ def print_underline(*args, style='-', **kwargs):
     print(txt, style * math.ceil(length / len(style)), sep='\n', **kwargs)
 
 
-def display_songs(songs: List[tuple]):
+def display_songs(songs: List):
     """Prints a list of songs on the screen.
 
-    :param songs: A list of songs to display. Each song is a tuple made of:
-        - id:`int`       Optional. The song's id.
-        - name:`str`     Required. The song's title.
-        - duration:`int` Optional. The song's duration.
-        - group:`str`    Optional. The song's group.
+    :param songs: A list of songs to display. Each song is a dict made of:
+        - song_id:`int`     Optional. The song's id.
+        - song_name:`str`   Required. The song's title.
+        - duration:`int`    Optional. The song's duration.
+        - group_name:`str`  Optional. The song's group.
+        - featuring:`list`  Optional. A list of groups that have been featured in the song.
     """
     if len(songs) == 0:
         print('<empty>')
         return
 
-    nargs = len(songs[0])
-    if not isinstance(songs[0][0], int):
+    if "song_id" not in songs[0]:
         last = len(songs)
-        songs = ((i, *s) for i, s in enumerate(songs, 1))
-        nargs += 1
+        songs = [{"song_id": i, **s} for i, s in enumerate(songs, 1)]
     else:
-        last = max(s[0] for s in songs)
+        last = max(s["song_id"] for s in songs)
 
     length = math.floor(math.log10(last)) + 1
-    for sid, name, *song in songs:
-        text = f'{sid:>{length}}. {name}'
-        if nargs > 2:  # duration
-            text += f' ({format_duration(song[0])})'
-        if nargs > 3:  # group
-            text += f' - {song[1]}'
+    for song in songs:
+        text = f'{song["song_id"]:>{length}}. {song["song_name"]}'
+        if "duration" in song:                          # duration
+            text += f' ({format_duration(song["duration"])})'
+        if "group_name" in song:                        # group
+            text += f' - {song["group_name"]}'
+        if "featuring" in song and song["featuring"]:   # featuring
+            text += f' (ft. {", ".join(song["featuring"])})'
 
         print(text)
 
@@ -156,3 +160,27 @@ def choose_album(album_query):
 
 def choose_song(song_query):
     return _choose(song_query, "songs", "group_name")
+
+
+def encode(data) -> str:
+    """Transforms a python object into a shareable string.
+
+    :param data: Data to encode.
+    :return: Encoded data
+    """
+    json_str = json.dumps(data)
+    comp_bytes = zlib.compress(json_str.encode("utf-8"))
+    encoded_bytes = base64.b64encode(comp_bytes)
+    return str(encoded_bytes, "utf-8")
+
+
+def decode(data: str):
+    """Transforms a shareable string into a python object.
+
+    :param data: string to decode.
+    :return: Data decoded.
+    """
+    decoded_bytes = base64.b64decode(data.encode("utf-8"))
+    decomp_byptes = zlib.decompress(decoded_bytes)
+    json_str = str(decomp_byptes, "utf-8")
+    return json.loads(json_str)
