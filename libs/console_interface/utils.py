@@ -3,7 +3,7 @@ import getpass
 import json
 import base64
 import zlib
-from typing import List, Dict, Any
+from typing import List
 
 getuser = getpass.getuser
 
@@ -66,6 +66,8 @@ def question(name: str, default: str = None):
 
 
 def question_choice(name: str, choices: List[str]):
+    if not choices:
+        return None
     result = ""
     while result not in choices:
         result = input(f"{name} [{'/'.join(choices)}]:")
