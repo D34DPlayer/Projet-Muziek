@@ -55,6 +55,10 @@ class PlaylistItem:
         return self._id
 
     @property
+    def url(self) -> str:
+        return f'https://www.youtube.com/watch?v={self.id}'
+
+    @property
     def title(self) -> str:
         return self._title
 
