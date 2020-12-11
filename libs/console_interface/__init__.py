@@ -3,6 +3,7 @@ import logging
 
 from ..database import DBMuziek
 from ..downloader import SongDownloader
+from ..youtube_api import YoutubeAPI
 from . import utils
 
 
@@ -361,3 +362,66 @@ def download_song(db: DBMuziek, name: str):
 
     print("Download complete.")
     logger.info(f'The song {name} has been downloaded.')
+
+
+def list_yt_playlist(db: DBMuziek, name: str = None):
+    """Lists your Youtube playlists.
+
+    :author: Mathieu
+    :param db: The database used.
+    :param name: If not None, will list all songs from that playlist.
+    """
+    yt = YoutubeAPI(db)
+    for playlist in yt.playlists:
+        if name is None or playlist.title == name:
+            print(playlist)
+
+            if name is not None:
+                for song in playlist.songs:
+                    print(f'\t- {song}')
+
+                break
+    else:
+        if name is not None:
+            print(f'The playlist "{name}" does not exists.')
+
+
+def import_from_yt(db: DBMuziek, name: str):
+    """Imports a playlist from Youtube.
+
+    :author: Mathieu
+    :param db: The database used.
+    """
+    if db.get_playlist(name) is not None:
+        print(f'The playlist "{name}" already exists.')
+        return
+
+    yt = YoutubeAPI(db)
+    for playlist in yt.playlists:
+        if playlist.title.lower() == name.lower():
+            break
+    else:
+        print(f'Cannot find the playlist "{name}" on your Youtube account.')
+        return
+
+    playlist_id = create_playlist(db, name)[0]
+    for song in playlist.songs:
+        author, title = utils.strip_brackets(song.title).split('-')
+        author, title = author.strip(), title.strip()
+
+        print(f'Author: {author}')
+        if utils.question_choice("Would you like to rename the song's author ?", 'yn') == 'y':
+            author = input('Author: ').strip()
+
+        if group_id := db.get_group(author) is None:
+            group_id = db.create_group(author, [author])
+
+        print(f'Title: {title}')
+        if utils.question_choice("Would you like to rename the song's title ?", 'yn') == 'y':
+            title = input('Title: ').strip()
+
+        if song_id := db.get_song(title) is None:
+            genre = utils.question("Song's genre: ")
+            song_id = db.create_song(title, song.url, genre, group_id, [])
+
+        db.add_song_playlist(playlist_id, song_id)
