@@ -1,16 +1,15 @@
 import logging
 import os
-import requests
 import time
 import webbrowser
-
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Union
-from urllib.parse import urlencode, urlparse, parse_qsl
+from urllib.parse import parse_qsl, urlencode, urlparse
+
+import requests
 
 from ..database import DBMuziek
-
 
 logger = logging.getLogger('youtube-api.oauth2')
 

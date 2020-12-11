@@ -1,11 +1,12 @@
 import logging
+import re
+from typing import List, Optional
+from urllib.parse import urlparse
+
 import requests
 
-from typing import List
-
-from .oauth2 import Token
 from ..database import DBMuziek
-
+from .oauth2 import Token
 
 logger = logging.getLogger('youtube-api')
 
