@@ -1,5 +1,6 @@
-import math
 import getpass
+import math
+import re
 from typing import List
 
 getuser = getpass.getuser
@@ -120,3 +121,12 @@ def pagination(total: int, page: int) -> int:
         return page
 
     return -1
+
+
+def strip_brackets(string: str) -> str:
+    """Removes brackets and its content.
+
+    :param string: A string with brackets.
+    :return: The input string without the brackets and its content.
+    """
+    return re.sub(r'(?:(\()|(\{)|(\[)).*?(?(1)\)|(?(2)\}|\]))', '', string).strip()
