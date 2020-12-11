@@ -486,7 +486,7 @@ def export_to_yt(db: DBMuziek, name: str):
 
     for song in songs:
         link = song['link']
-        title = song['name']
+        title = song['song_name']
         if link is None:
             print(f'The song "{title}" has no Youtube link.')
             link = utils.question('Give a youtube link for this song or nothing to ignore it.', default='').strip()
@@ -495,7 +495,7 @@ def export_to_yt(db: DBMuziek, name: str):
                 continue
 
         try:
-            yt.add_song(playlist, link, note=f'{song["author"]} - {title}')
+            yt.add_song(playlist, link, note=f'{song["group_name"]} - {title}')
         except ValueError:
             print(f'Unable to export the song "{title}". Reason: invalid link.')
         except RuntimeError as e:
