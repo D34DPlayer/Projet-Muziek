@@ -191,3 +191,13 @@ SELECT f.group_id as group_id, g.name as group_name, members
         LEFT JOIN groups as g on f.group_id = g.group_id
     WHERE f.song_id = ?;
 """
+
+get_albums = """
+SELECT a.name as album_name, g.name as group_name
+    FROM albums as a 
+        LEFT JOIN groups as g on a.group_id = g.group_id;
+"""
+
+get_groups = "SELECT name as group_name, members FROM groups;"
+
+get_genres = "SELECT DISTINCT lower(genre) as genre FROM songs;"

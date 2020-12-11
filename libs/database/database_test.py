@@ -24,7 +24,7 @@ def test_database():
     db.commit()
     assert db.get_setting("test") == "value"
 
-    # CREATE GROUP AND GET GROUP
+    # CREATE GROUP AND GET GROUP(S)
     group_data = {
         "name": "TestGroup",
         "members": ["Member1", "Member2"]
@@ -34,6 +34,7 @@ def test_database():
     db.commit()
     group_data_bis = db.get_group(group_data["name"])
     group_data_verbose = db.get_group(group_data["name"].upper(), True)
+    groups = db.get_groups()
 
     assert group_data_bis["group_name"] == group_data["name"]
     assert group_data_bis["members"] == ",".join(group_data["members"])
@@ -45,6 +46,9 @@ def test_database():
     assert group_data_verbose[2] == 0
 
     assert db.get_group("FakeGroup") is None
+
+    assert len(groups) == 1
+    assert groups[0]["group_name"] == group_data["name"]
 
     # UPDATE GROUP
     db.update_group(group_data["id"], group_data["members"][:1])
@@ -120,7 +124,7 @@ def test_database():
     assert len(db.get_songs({"genre": "OthErGenRE", "group": "tGro"})) == 1
     assert len(db.get_songs({"genre": "OtherGEnRE", "name": "songg"})) == 0
 
-    # CREATE ALBUM AND GET ALBUM
+    # CREATE ALBUM AND GET ALBUM(S)
     album_data = {
         "name": "TestAlbum",
         "songs": [song_data["id"]],
@@ -131,6 +135,7 @@ def test_database():
     db.commit()
     album_data_bis = db.get_album(album_data["name"], album_data["group_id"])
     album_data_upper = db.get_album(album_data["name"].upper())
+    albums = db.get_albums()
 
     assert album_data_bis["album_name"] == album_data["name"]
     assert album_data_bis["album_id"] == album_data["id"]
@@ -139,6 +144,9 @@ def test_database():
 
     assert len(album_data_upper) == 1
     assert album_data_upper[0]["album_name"] == album_data["name"]
+
+    assert len(albums) == 1
+    assert albums[0]["album_name"] == album_data["name"]
 
     # GET ALBUM SONGS
     album_songs = db.get_album_songs(album_data["id"])
@@ -202,6 +210,9 @@ def test_database():
     assert playlist_songs[0]["genre"] == "OtherGenre"
 
     assert playlist_songs[1]["song_id"] == other_song_id
+
+    # GET GENRES
+    assert db.get_genres() == ['Othergenre', 'Genre']
 
     # DATABASE END
     db.disconnect()

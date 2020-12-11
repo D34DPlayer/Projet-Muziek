@@ -476,3 +476,21 @@ def export_playlist(db: DBMuziek, name: str):
 
     print(f"Share this text to share the playlist:\n {buffer}")
     logger.info(f"The playlist {name} has been successfully exported.")
+
+
+def list_groups(db: DBMuziek):
+    groups = db.get_groups()
+
+    print(f"You have {len(groups)} groups:")
+
+    for group in groups:
+        print(f"{group['group_name']}")
+
+
+def list_albums(db: DBMuziek):
+    albums = db.get_albums()
+
+    print(f"You have {len(albums)} albums:")
+
+    for album in albums:
+        print(f"{album['album_name']} by {album['group_name']}")

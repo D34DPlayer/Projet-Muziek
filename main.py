@@ -6,7 +6,7 @@ Usage:
   main.py [-d <PATH>] list songs [-g <genre>] [-n <name>] [-G group]
   main.py [-d <PATH>] list group <name>
   main.py [-d <PATH>] list album <name>
-  main.py [-d <PATH>] list playlists
+  main.py [-d <PATH>] list (playlists | groups | albums)
   main.py [-d <PATH>] download song <name>
   main.py -h | --help
   main.py --version
@@ -51,6 +51,10 @@ if __name__ == "__main__":
                 cli.list_album(db, args['<name>'])
             elif args['playlists']:
                 cli.list_playlists(db)
+            elif args['albums']:
+                cli.list_albums(db)
+            elif args['groups']:
+                cli.list_groups(db)
 
         elif args['playlist']:
             if args['--import']:

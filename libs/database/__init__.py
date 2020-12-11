@@ -403,3 +403,27 @@ class DBMuziek:
         :param value: The value to store.
         """
         self.execute(db_queries.set_setting, (key, str(value)))
+
+    def get_albums(self):
+        """Obtains a list with all the albums created.
+
+        :return: List of Rows with the album's info.
+        """
+        return self.execute(db_queries.get_albums).fetchall()
+
+    def get_groups(self):
+        """Obtains a list with all the groups created.
+
+        :return: List of Rows with the group's info.
+        """
+        return self.execute(db_queries.get_groups).fetchall()
+
+    def get_genres(self):
+        """Obtains a list with all the albums created.
+
+        :return: List of strings with the genres in the database.
+        """
+        genres = self.execute(db_queries.get_genres).fetchall()
+
+        genres = [g["genre"] for g in genres]
+        return [g[0].upper() + g[1:] for g in genres]
