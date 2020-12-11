@@ -391,17 +391,16 @@ def import_from_yt(db: DBMuziek, name: str):
 
     :author: Mathieu
     :param db: The database used.
+    :param name: The Youtube playlist to import.
     """
     if db.get_playlist(name) is not None:
         print(f'The playlist "{name}" already exists.')
         return
 
     yt = YoutubeAPI(db)
-    for playlist in yt.playlists:
-        if playlist.title.lower() == name.lower():
-            break
-    else:
-        print(f'Cannot find the playlist "{name}" on your Youtube account.')
+    playlist = yt.get_playlist(name)
+    if playlist is None:
+        print(f'Cannot find the playlist "{name}" on your Youtube library.')
         return
 
     playlist_id = create_playlist(db, name)[0]

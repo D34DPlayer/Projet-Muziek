@@ -134,13 +134,23 @@ class YoutubeAPI:
 
         return self._playlists
 
+    def get_playlist(self, name: str) -> Optional[Playlist]:
+        """Find a playlist in your library.
+
+        :param name: The playlist's name to find.
+        :return: The playlist if found, None otherwise.
+        """
+        for playlist in self.playlists:
+            if playlist.title.lower() == name.lower():
+                return playlist
+
     def create_playlist(self, name: str, description: Optional[str] = None, private: bool = True) -> Playlist:
         """Create a playlist on Youtube.
 
         :param name: display name for the playlist.
         :param description: a description for the playlist.
         :param private: True to create a private playlist. Otherwise the playlist will be unlisted.
-        :return! the freshly created playlist.
+        :return: the freshly created playlist.
         """
         data = {
             'snippet': {
