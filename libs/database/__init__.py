@@ -55,7 +55,8 @@ class DBMuziek:
         :author: Mathieu
         """
         self.connect()
-        self.validate_tables()
+        if not self.validate_tables():
+            self.commit()
         return self
 
     def __exit__(self, *args):
@@ -105,30 +106,30 @@ class DBMuziek:
         """Checks if the expected tables exist in the database and creates them if they don't.
 
         :author: Carlos
+        :return: False if any table needed to be created, True otherwise.
         """
+        tables = (
+            "groups",
+            "songs",
+            "songFeaturing",
+            "playlists",
+            "playlistSongs",
+            "albums",
+            "albumSongs",
+            "settings"
+        )
+
+        output = True
+
         if not self.foreign_keys():
             self.execute(db_queries.foreign_keys_enable)
 
-        if not self.table_exists('groups'):
-            self.execute(db_queries.create_groups)
+        for table in tables:
+            if not self.table_exists(table):
+                self.execute(getattr(db_queries, f"create_{table}"))
+                output = False
 
-        if not self.table_exists('songs'):
-            self.execute(db_queries.create_songs)
-        if not self.table_exists('songFeaturing'):
-            self.execute(db_queries.create_songFeaturing)
-
-        if not self.table_exists('playlists'):
-            self.execute(db_queries.create_playlists)
-        if not self.table_exists('playlistSongs'):
-            self.execute(db_queries.create_playlistSongs)
-
-        if not self.table_exists('albums'):
-            self.execute(db_queries.create_albums)
-        if not self.table_exists('albumSongs'):
-            self.execute(db_queries.create_albumSongs)
-
-        if not self.table_exists('settings'):
-            self.execute(db_queries.create_settings)
+        return output
 
     def table_exists(self, name: str) -> int:
         """Checks if a table exist in the database.
@@ -147,15 +148,24 @@ class DBMuziek:
         result = self.execute(db_queries.foreign_keys)
         return result.fetchone()[0]
 
-    def count_songs(self, filters: dict):
+    def count_songs(self, filters: dict = None):
         """Returns the amount of songs, after being filtered.
 
         :param filters: Filters the songs need to fit to be counted.
         :return: The amount of songs.
         """
-        genre = (db_queries.append_genre, filters["genre"])
-        name = (db_queries.append_name, fuzy(filters["name"]))
-        group = (db_queries.append_group, fuzy(filters["group"]))
+        default = {
+            "genre": None,
+            "name": None,
+            "group": None
+        }
+
+        if filters:
+            default = {**default, **filters}
+
+        genre = (db_queries.append_genre, default["genre"])
+        name = (db_queries.append_name, fuzy(default["name"]))
+        group = (db_queries.append_group, fuzy(default["group"]))
         query, params = query_append(db_queries.count_songs, "", genre, name, group)
 
         return self.execute(query, params).fetchone()[0]
@@ -168,19 +178,34 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_playlist, (name,)).fetchone()
 
-    def get_song(self, name: str):
-        """Obtains a song from the database based on its name.
+    def get_playlists(self):
+        """Obtains a list with all the playlists created.
 
-        :param name: The name of the song.
-        :return: A Row if the song exists, None if it doesn't
+        :return: A list with Rows
         """
-        return self.execute(db_queries.get_song, (name,)).fetchone()
+        return self.execute(db_queries.get_playlists).fetchall()
 
-    """
-    TODO: A get_song that accepts a song_name and a group_id, to prevent collisions.
-    """
+    def get_song(self, song_name: str, group_id: Optional[str] = None):
+        """Obtains a song from the database based on its name, and optionally its group name.
 
-    def get_songs(self, filters: dict, offset: int = 0, limit: int = 50):
+        :param song_name: The name of the song.
+        :param group_id: The id of the group.
+        :return: A list of Rows if the song(s) exists, None if it doesn't, only one Row if the group is provided.
+        """
+        if not group_id:
+            return self.execute(db_queries.get_song, (song_name,)).fetchall()
+        else:
+            return self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
+
+    def get_song_featuring(self, song_id: int):
+        """Obtains the groups featured in a song.
+
+        :param song_id: The id of the song.
+        :return: Returns a list of Rows with the groups featured in the song.
+        """
+        return self.execute(db_queries.get_song_featuring, (song_id,)).fetchall()
+
+    def get_songs(self, filters: dict = None, offset: int = 0, limit: int = 50):
         """Obtains a defined amount of songs, after being filtered.
 
         :param filters: The filters the songs need to fit.
@@ -188,12 +213,26 @@ class DBMuziek:
         :param limit: The lmimit in the database query.
         :return: An array of Rows
         """
-        genre = (db_queries.append_genre, filters["genre"])
-        name = (db_queries.append_name, fuzy(filters["name"]))
-        group = (db_queries.append_group, fuzy(filters["group"]))
+        default = {
+            "genre": None,
+            "name": None,
+            "group": None
+        }
+
+        if filters:
+            default = {**default, **filters}
+
+        genre = (db_queries.append_genre, default["genre"])
+        name = (db_queries.append_name, fuzy(default["name"]))
+        group = (db_queries.append_group, fuzy(default["group"]))
         query, params = query_append(db_queries.get_songs, db_queries.paging, genre, name, group)
 
-        return self.execute(query, (*params, limit, offset)).fetchall()
+        songs = list(map(dict, self.execute(query, (*params, limit, offset)).fetchall()))
+
+        for song in songs:
+            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+
+        return songs
 
     def get_group(self, name: str, verbose: bool = False):
         """Obtains a group from the database based on its name,
@@ -212,21 +251,31 @@ class DBMuziek:
             albums = self.execute(db_queries.count_group_albums, (group_query["group_id"],)).fetchone()["count"]
             return group_query, songs, albums
 
-    def get_album(self, name: str, verbose: bool = False):
-        """Obtains an album from the database based on its name,
-        will return even more info about it if requested.
+    def get_album(self, name: str, group_id: Optional[int] = None):
+        """Obtains an album from the database based on its name.
 
         :param name: The name of the album.
-        :param verbose: If more info should be provided.
-        :return: A Row if the song exists, None if it doesn't.
-                 If verbose a list of Rows with the songs in the album will be also provided.
+        :param group_id: The id of the group, optional
+        :return: A Row if the album exists and the group is provided, None if it doesn't.
+                 If no group is provided a list of Rows.
         """
-        album_query = self.execute(db_queries.get_album, (name,)).fetchone()
-        if not verbose:
-            return album_query
-        elif album_query:
-            songs = self.execute(db_queries.get_songs_album, (album_query["album_id"],)).fetchall()
-            return album_query, songs
+        if group_id:
+            return self.execute(db_queries.get_album_with_group, (name, group_id)).fetchone()
+        else:
+            return self.execute(db_queries.get_album, (name,)).fetchall()
+
+    def get_album_songs(self, album_id: int):
+        """Obtains a list with all the songs an album contains.
+
+        :param album_id: The id of the album.
+        :return: A list of Rows with songs.
+        """
+        songs = list(map(dict, self.execute(db_queries.get_songs_album, (album_id,)).fetchall()))
+
+        for song in songs:
+            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+
+        return songs
 
     def add_song_playlist(self, playlist_id: int, song_id: int):
         """Adds an existing song to an existing playlist.
@@ -243,7 +292,12 @@ class DBMuziek:
         :param playlist_id: The id of the playlist.
         :return: A list of Rows with the songs in the playlist.
         """
-        return self.execute(db_queries.get_playlist_data, (playlist_id,)).fetchall()
+        songs = list(map(dict, self.execute(db_queries.get_playlist_songs, (playlist_id,)).fetchall()))
+
+        for song in songs:
+            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+
+        return songs
 
     def create_playlist(self, name: str, author: str) -> int:
         """Creates a new playlist in the database.
@@ -268,38 +322,108 @@ class DBMuziek:
 
         :param group_id: The id of group to update.
         :param members: The members of the group.
-        :return: A database cursor.
         """
-        return self.execute(db_queries.update_group, (','.join(members), group_id))
+        self.execute(db_queries.update_group, (','.join(members), group_id))
 
-    def create_song(self, name: str, link: str, genre: str, group_id: int, featuring: List[int]) -> int:
-        song_id = self.execute(db_queries.create_song, (name, link, genre, group_id)).lastrowid
+    def create_song(self, name: str, link: str, genre: str,
+                    duration: int, group_id: int, featuring: List[int]) -> int:
+        """Creates a new song in the database.
+
+        :param name: Name of the song.
+        :param link: Link to the song in YouTube.
+        :param genre: Genre of the song.
+        :param duration: Duration of the song.
+        :param group_id: Id of the author of the song.
+        :param featuring: List of id's for the groups featured in this song.
+        :return: Id of the song created.
+        """
+        song_id = self.execute(db_queries.create_song, (name, link, genre, group_id, duration)).lastrowid
 
         for featuring_id in featuring:
             self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
 
         return song_id
 
-    def update_song(self, song_id: int, link: str, genre: str, group_id: int):
-        return self.execute(db_queries.update_song, (link, genre, group_id, song_id))
+    def update_song(self, song_id: int, link: str, genre: str,
+                    duration: int, featuring: List[int]):
+        """Updates the information stored for a song in the database.
+
+        :param song_id: Id of the song to update.
+        :param link: Link to the song in YouTube.
+        :param genre: Genre of the song.
+        :param duration: Duration of the song.
+        :param featuring: List of id's for the groups featuring this song.
+        """
+        self.execute(db_queries.update_song, (link, genre, duration, song_id))
+
+        self.execute(db_queries.delete_song_featuring, (song_id,))
+        for featuring_id in featuring:
+            self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
 
     def create_album(self, name: str, songs: List[int], group_id: int) -> int:
+        """Creates a new album in the database.
+
+        :param name: Name of the album.
+        :param songs: List of id's for the songs included in the album.
+        :param group_id: Id of the author of the album.
+        :return: The id of the album created.
+        """
         album_id = self.execute(db_queries.create_album, (name, group_id)).lastrowid
         for song_id in songs:
             self.execute(db_queries.add_song_album, (album_id, song_id))
         return album_id
 
     def update_album(self, album_id: int, songs: List[int]):
+        """Updates the information stored for an album in the database.
+
+        :param album_id: Id of the album to update.
+        :param songs: List of id's for the songs included in the album.
+        """
         self.execute(db_queries.delete_album_songs, (album_id,))
         for song_id in songs:
             self.execute(db_queries.add_song_album, (album_id, song_id))
 
     def get_setting(self, key: str, default: str = None) -> str:
+        """Returns a stored setting value if it has been saved.
+
+        :param key: The key to find the value.
+        :param default: The default value.
+        :return: The value if it's found, the default one otherwise.
+        """
         row = self.execute(db_queries.get_setting, (key,)).fetchone()
         if row is None:
             return default
 
-        return row['value']
+        return row["value"]
 
     def set_setting(self, key: str, value: str):
+        """Stores a setting value in the database.
+
+        :param key: The key to stored the value under.
+        :param value: The value to store.
+        """
         self.execute(db_queries.set_setting, (key, str(value)))
+
+    def get_albums(self):
+        """Obtains a list with all the albums created.
+
+        :return: List of Rows with the album's info.
+        """
+        return self.execute(db_queries.get_albums).fetchall()
+
+    def get_groups(self):
+        """Obtains a list with all the groups created.
+
+        :return: List of Rows with the group's info.
+        """
+        return self.execute(db_queries.get_groups).fetchall()
+
+    def get_genres(self):
+        """Obtains a list with all the albums created.
+
+        :return: List of strings with the genres in the database.
+        """
+        genres = self.execute(db_queries.get_genres).fetchall()
+
+        genres = [g["genre"] for g in genres]
+        return [g[0].upper() + g[1:] for g in genres]

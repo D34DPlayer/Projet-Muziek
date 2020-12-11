@@ -87,39 +87,48 @@ SELECT count(song_id)
         LEFT JOIN groups as g ON s.group_id = g.group_id
 '''
 
-get_playlist = "SELECT playlist_id, author FROM playlists WHERE name = ?;"
+get_playlist = "SELECT playlist_id, author, name as playlist_name FROM playlists WHERE lower(name) = lower(?);"
+
+get_playlists = "SELECT playlist_id, author, name as playlist_name FROM playlists;"
 
 get_song = '''
-SELECT s.song_id, s.name as song_name, g.name as group_name, link
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM songs as s
         LEFT JOIN groups g on s.group_id = g.group_id
-    WHERE s.name = ?;
+    WHERE lower(s.name) = lower(?);
+'''
+
+get_song_with_group = '''
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
+    FROM songs as s
+        LEFT JOIN groups g on s.group_id = g.group_id
+    WHERE lower(s.name) = lower(?) and g.group_id = ?;
 '''
 
 get_songs = '''
-SELECT s.song_id, s.name, s.duration, g.name
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM songs as s
         LEFT JOIN groups as g ON s.group_id = g.group_id
 '''
 
-append_genre = "genre = ?"
+append_genre = "lower(genre) = lower(?)"
 
-append_name = "s.name LIKE ?"
+append_name = "lower(s.name) LIKE lower(?)"
 
-append_group = "g.name LIKE ?"
+append_group = "lower(g.name) LIKE lower(?)"
 
 paging = "LIMIT ? OFFSET ?"
 
 get_group = '''
-SELECT group_id, members, (select count(song_id) from songs where songs.group_id == groups.group_id)
+SELECT group_id, members, name as group_name
     FROM groups
-    WHERE name = ?;
+    WHERE lower(name) = lower(?);
 '''
 
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
 
-get_playlist_data = '''
-SELECT s.name, s.duration, g.name as author, s.link
+get_playlist_songs = '''
+SELECT p.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
     FROM playlistSongs as p
         LEFT JOIN songs AS s ON s.song_id = p.song_id
         LEFT JOIN groups AS g ON g.group_id = s.group_id
@@ -132,15 +141,22 @@ create_group = "INSERT INTO groups(name, members) VALUES (?, ?);"
 
 update_group = "UPDATE groups SET members = ? where group_id = ?;"
 
-create_song = "INSERT INTO songs(name, link, genre, group_id) VALUES (?, ?, ?, ?);"
+create_song = "INSERT INTO songs(name, link, genre, group_id, duration) VALUES (?, ?, ?, ?, ?);"
 
-update_song = "UPDATE songs SET link = ?, genre = ?, group_id = ? where song_id = ?;"
+update_song = "UPDATE songs SET link = ?, genre = ?, duration = ? where song_id = ?;"
 
 get_album = '''
-SELECT album_id, a.group_id as group_id, g.name as group_name
+SELECT album_id, a.group_id as group_id, g.name as group_name, a.name as album_name
     FROM albums as a
         LEFT JOIN groups as g on a.group_id = g.group_id
-    WHERE a.name = ?;
+    WHERE lower(a.name) = lower(?);
+'''
+
+get_album_with_group = '''
+SELECT album_id, a.group_id as group_id, g.name as group_name, a.name as album_name
+    FROM albums as a
+        LEFT JOIN groups as g on a.group_id = g.group_id
+    WHERE lower(a.name) = lower(?) and g.group_id = ?;
 '''
 
 create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
@@ -156,7 +172,7 @@ count_group_songs = "SELECT COUNT(song_id) as count FROM songs WHERE group_id = 
 count_group_albums = "SELECT COUNT(album_id) as count FROM albums WHERE group_id = ?;"
 
 get_songs_album = '''
-SELECT s.song_id, s.name, s.duration, g.name
+SELECT a.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM albumSongs as a
         LEFT JOIN songs as s on a.song_id = s.song_id
         LEFT JOIN groups as g on s.group_id = g.group_id
@@ -166,3 +182,22 @@ SELECT s.song_id, s.name, s.duration, g.name
 get_setting = "SELECT value FROM settings WHERE key = ?;"
 
 set_setting = "INSERT OR REPLACE INTO settings(key, value) VALUES (?, ?);"
+
+delete_song_featuring = "DELETE FROM songFeaturing WHERE song_id = ?;"
+
+get_song_featuring = """
+SELECT f.group_id as group_id, g.name as group_name, members
+    FROM songFeaturing as f
+        LEFT JOIN groups as g on f.group_id = g.group_id
+    WHERE f.song_id = ?;
+"""
+
+get_albums = """
+SELECT a.name as album_name, g.name as group_name
+    FROM albums as a
+        LEFT JOIN groups as g on a.group_id = g.group_id;
+"""
+
+get_groups = "SELECT name as group_name, members FROM groups;"
+
+get_genres = "SELECT DISTINCT lower(genre) as genre FROM songs;"
