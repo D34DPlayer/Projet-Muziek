@@ -117,9 +117,7 @@ class Token:
         self._expires_at = float(db.get_setting('yt.oauth2.expires_at', 0))
 
     def prompt_access(self, modify=False):
-        scopes = [SCOPE_READONLY]
-        if modify:
-            scopes.append(SCOPE_MODIFY)
+        scopes = [SCOPE_MODIFY]
 
         state = os.urandom(16).hex()
         params = {
