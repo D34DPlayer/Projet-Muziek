@@ -116,3 +116,9 @@ def test_encoding():
 
     assert data is not decoded
     assert data == decoded
+
+
+def test_strip_brackets():
+    assert u.strip_brackets('Music title [OFFICIAL] (remastered)') == 'Music title'
+    assert u.strip_brackets('Music title []()') == 'Music title'
+    assert u.strip_brackets('Music title {super}') == 'Music title'
