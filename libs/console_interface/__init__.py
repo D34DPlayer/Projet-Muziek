@@ -432,3 +432,51 @@ def import_from_yt(db: DBMuziek, name: str):
         db.add_song_playlist(playlist_id, song_id)
 
     db.commit()
+
+
+def export_to_yt(db: DBMuziek, name: str):
+    """Exports a playlist to Youtube.
+
+    :author: Mathieu
+    :param db: The database used.
+    :param name: The playlist to export.
+    """
+    playlist = db.get_playlist(name)
+    if playlist is None:
+        print(f'The playlist "{name}" does not exists.')
+        return
+
+    yt = YoutubeAPI(db)
+    songs = db.get_playlist_songs(playlist['playlist_id'])
+
+    while True:
+        name = utils.question('Youtube playlist name', default=name).strip()
+        playlist = yt.get_playlist(name)
+        if playlist is None:
+            description = utils.question('Playlist description', default='<empty>')
+            if description == '<empty>':
+                description = ''
+
+            playlist = yt.create_playlist(name, description)
+            break
+
+        print('A Youtube playlist with the same name already exist.')
+        if utils.question_choice("Add the songs to that playlist ?", ['y', 'n']) == 'y':
+            break
+
+    for song in songs:
+        link = song['link']
+        title = song['name']
+        if link is None:
+            print(f'The song "{title}" has no Youtube link.')
+            link = utils.question('Give a youtube link for this song or nothing to ignore it.', default='').strip()
+            if not link:
+                print(f'The song "{title}" will not be added to your Youtube playlist.')
+                continue
+
+        try:
+            yt.add_song(playlist, link, note=f'{song["author"]} - {title}')
+        except ValueError:
+            print(f'Unable to export the song "{title}". Reason: invalid link.')
+        except RuntimeError as e:
+            print(f'Unable to export the song "{title}". Reason: {e}')
