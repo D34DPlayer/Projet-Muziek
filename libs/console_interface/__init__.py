@@ -410,18 +410,26 @@ def import_from_yt(db: DBMuziek, name: str):
         author, title = author.strip(), title.strip()
 
         print(f'Author: {author}')
-        if utils.question_choice("Would you like to rename the song's author ?", 'yn') == 'y':
-            author = input('Author: ').strip()
+        if utils.question_choice("Would you like to rename the song's author ?", ['y', 'n']) == 'y':
+            author = utils.question('Author').strip()
 
-        if group_id := db.get_group(author) is None:
+        group_id = db.get_group(author)
+        if group_id is None:
             group_id = db.create_group(author, [author])
+        else:
+            group_id = group_id['group_id']
 
         print(f'Title: {title}')
-        if utils.question_choice("Would you like to rename the song's title ?", 'yn') == 'y':
-            title = input('Title: ').strip()
+        if utils.question_choice("Would you like to rename the song's title ?", ['y', 'n']) == 'y':
+            title = utils.question('Title').strip()
 
-        if song_id := db.get_song(title) is None:
-            genre = utils.question("Song's genre: ")
+        song_id = db.get_song(title)
+        if song_id is None:
+            genre = utils.question("Song's genre").strip()
             song_id = db.create_song(title, song.url, genre, group_id, [])
+        else:
+            song_id = song_id['song_id']
 
         db.add_song_playlist(playlist_id, song_id)
+
+    db.commit()
