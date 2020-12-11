@@ -42,7 +42,7 @@ if __name__ == "__main__":
             elif args['album']:
                 cli.add_album(db)
 
-        elif args['youtube']: # overwrite `list` command
+        elif args['youtube']:  # overwrite `list` command
             if args['list']:
                 cli.list_yt_playlist(db, args['<name>'])
             elif args['import']:
