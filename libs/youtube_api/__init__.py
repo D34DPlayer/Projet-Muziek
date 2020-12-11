@@ -13,6 +13,29 @@ URL_PLAYLISTS = 'https://www.googleapis.com/youtube/v3/playlists'
 URL_PLAYLIST_ITEMS = 'https://www.googleapis.com/youtube/v3/playlistItems'
 
 
+def parseVideoId(song: str) -> str:
+    """Parse and return a valid videoId.
+
+    :param song: The song to get the id from. Both an url to a video and its videoId are valid.
+    :return: The parsed videoId.
+    :raise: ValueError if the song is not valid.
+    """
+    url = urlparse(song)
+    if url.netloc == '':
+        videoId = song
+    else:
+        query = dict(a.split('=', 1) for a in url.query.split('&'))
+        videoId = query.get('v')
+
+        if videoId is None:
+            raise ValueError(f'Invalid url: {song}')
+
+    if re.match(r'[0-9A-Za-z_-]{11}', videoId) is None:
+        raise ValueError(f'"{videoId}" is not a valid videoId, could it be truncated ?')
+
+    return videoId
+
+
 class PlaylistItem:
     def __init__(self, token: Token, **kwargs):
         kind = kwargs.get('kind', '')
@@ -105,3 +128,55 @@ class YoutubeAPI:
                     self._playlists.extend(Playlist(self._token, **item) for item in data['items'])
 
         return self._playlists
+
+    def create_playlist(self, name: str, description: Optional[str] = None, private: bool = True) -> Playlist:
+        """Create a playlist on Youtube.
+
+        :param name: display name for the playlist.
+        :param description: a description for the playlist.
+        :param private: True to create a private playlist. Otherwise the playlist will be unlisted.
+        :return! the freshly created playlist.
+        """
+        data = {
+            'snippet': {
+                'title': name,
+                'description': description,
+                'privacyStatus': ['unlisted', 'private'][private]
+            }
+        }
+        with requests.post(URL_PLAYLISTS, json=data, params=dict(part='snippet'), headers=self._token.headers) as r:
+            # fetch the playlists
+            playlist = Playlist(self._token, **r.json())
+            self.playlists.append(playlist)
+
+        return playlist
+
+    def add_song(self, playlist: Playlist, song: str, note: str = None):
+        """Add a song to a Youtube playlist.
+
+        :param playlist: The playlist object where the song will be added.
+        :param song: The song to add to the playlist. Both an url to a video and its videoId are valid.
+        :raise: ValueError if the song is not valid.
+        :raise: RuntimeError if there is an error from the YoutubeAPI.
+        """
+        data = {
+            'snippet': {
+                'playlistId': playlist.id,
+                'resourceId': {
+                    'kind': 'youtube#video',
+                    'videoId': parseVideoId(song)
+                },
+                'contentDetails': {
+                    'note': note
+                }
+            }
+        }
+        with requests.post(URL_PLAYLIST_ITEMS, json=data, params=dict(part='snippet')) as r:
+            data = r.json()
+            if not r.ok():
+                error = data.get('error', {})
+                errors = ', '.join(e.get('reason') for e in error.get('errors', []))
+                raise RuntimeError(f'{error.get("code", r.status_code)}: {errors or error.get("message", "Unknown")}')
+
+            if playlist._songs is not None:
+                playlist._songs.append(PlaylistItem(self._token, **data))
