@@ -119,7 +119,7 @@ SELECT group_id, members, (select count(song_id) from songs where songs.group_id
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
 
 get_playlist_data = '''
-SELECT s.name, s.duration, g.name
+SELECT s.name, s.duration, g.name as author, s.link
     FROM playlistSongs as p
         LEFT JOIN songs AS s ON s.song_id = p.song_id
         LEFT JOIN groups AS g ON g.group_id = s.group_id
