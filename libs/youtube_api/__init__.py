@@ -31,7 +31,7 @@ def parseVideoId(song: str) -> str:
         if videoId is None:
             raise ValueError(f'Invalid url: {song}')
 
-    if re.match(r'[0-9A-Za-z_-]{11}', videoId) is None:
+    if re.match(r'^[0-9A-Za-z_-]{11}$', videoId) is None:
         raise ValueError(f'"{videoId}" is not a valid videoId, could it be truncated ?')
 
     return videoId
