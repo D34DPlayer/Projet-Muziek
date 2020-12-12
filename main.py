@@ -8,6 +8,9 @@ Usage:
   main.py [-d <PATH>] list album <name>
   main.py [-d <PATH>] list (playlists | groups | albums)
   main.py [-d <PATH>] download song <name>
+  main.py [-d <PATH>] youtube list [<name>]
+  main.py [-d <PATH>] youtube import <name>
+  main.py [-d <PATH>] youtube export <name>
   main.py -h | --help
   main.py --version
 
@@ -41,6 +44,14 @@ if __name__ == "__main__":
                 cli.add_group(db)
             elif args['album']:
                 cli.add_album(db)
+
+        elif args['youtube']:  # overwrite `list` command
+            if args['list']:
+                cli.list_yt_playlist(db, args['<name>'])
+            elif args['import']:
+                cli.import_from_yt(db, args['<name>'])
+            elif args['export']:
+                cli.export_to_yt(db, args['<name>'])
 
         elif args['list']:
             if args['songs']:

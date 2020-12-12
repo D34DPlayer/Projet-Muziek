@@ -390,11 +390,11 @@ class DBMuziek:
         :param default: The default value.
         :return: The value if it's found, the default one otherwise.
         """
-        value = self.execute(db_queries.get_setting, (key,)).fetchone()
-        if value is None:
+        row = self.execute(db_queries.get_setting, (key,)).fetchone()
+        if row is None:
             return default
 
-        return value["value"]
+        return row["value"]
 
     def set_setting(self, key: str, value: str):
         """Stores a setting value in the database.

@@ -1,4 +1,5 @@
 docopt
 youtube_dl
+requests
 music-tag
 pytest

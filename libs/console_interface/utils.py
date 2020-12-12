@@ -1,7 +1,8 @@
-import math
+import base64
 import getpass
 import json
-import base64
+import math
+import re
 import zlib
 from typing import List
 
@@ -126,6 +127,15 @@ def pagination(total: int, page: int) -> int:
         return page
 
     return -1
+
+
+def strip_brackets(string: str) -> str:
+    """Removes brackets and its content.
+
+    :param string: A string with brackets.
+    :return: The input string without the brackets and its content.
+    """
+    return re.sub(r'(?:(\()|(\{)|(\[)).*?(?(1)\)|(?(2)\}|\]))', '', string).strip()
 
 
 def _choose(query, _type: str, item: str):

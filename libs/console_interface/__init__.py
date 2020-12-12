@@ -3,6 +3,7 @@ import logging
 
 from ..database import DBMuziek
 from ..downloader import SongDownloader
+from ..youtube_api import YoutubeAPI
 from . import utils
 
 
@@ -381,6 +382,124 @@ def download_song(db: DBMuziek, name: str):
 
     print("Download complete.")
     logger.info(f'The song {name} has been downloaded.')
+
+
+def list_yt_playlist(db: DBMuziek, name: str = None):
+    """Lists your Youtube playlists.
+
+    :author: Mathieu
+    :param db: The database used.
+    :param name: If not None, will list all songs from that playlist.
+    """
+    yt = YoutubeAPI(db)
+    for playlist in yt.playlists:
+        if name is None or playlist.title == name:
+            print(playlist)
+
+            if name is not None:
+                for song in playlist.songs:
+                    print(f'\t- {song}')
+
+                break
+    else:
+        if name is not None:
+            print(f'The playlist "{name}" does not exists.')
+
+
+def import_from_yt(db: DBMuziek, name: str):
+    """Imports a playlist from Youtube.
+
+    :author: Mathieu
+    :param db: The database used.
+    :param name: The Youtube playlist to import.
+    """
+    if db.get_playlist(name) is not None:
+        print(f'The playlist "{name}" already exists.')
+        return
+
+    yt = YoutubeAPI(db)
+    playlist = yt.get_playlist(name)
+    if playlist is None:
+        print(f'Cannot find the playlist "{name}" on your Youtube library.')
+        return
+
+    playlist_id = create_playlist(db, name)[0]
+    for song in playlist.songs:
+        author, title = utils.strip_brackets(song.title).split('-')
+        author, title = author.strip(), title.strip()
+
+        print(f'Author: {author}')
+        if utils.question_choice("Would you like to rename the song's author ?", ['y', 'n']) == 'y':
+            author = utils.question('Author').strip()
+
+        group_id = db.get_group(author)
+        if group_id is None:
+            group_id = db.create_group(author, [author])
+        else:
+            group_id = group_id['group_id']
+
+        print(f'Title: {title}')
+        if utils.question_choice("Would you like to rename the song's title ?", ['y', 'n']) == 'y':
+            title = utils.question('Title').strip()
+
+        song_id = db.get_song(title)
+        if song_id is None:
+            genre = utils.question("Song's genre").strip()
+            song_id = db.create_song(title, song.url, genre, group_id, [])
+        else:
+            song_id = song_id['song_id']
+
+        db.add_song_playlist(playlist_id, song_id)
+
+    db.commit()
+
+
+def export_to_yt(db: DBMuziek, name: str):
+    """Exports a playlist to Youtube.
+
+    :author: Mathieu
+    :param db: The database used.
+    :param name: The playlist to export.
+    """
+    playlist = db.get_playlist(name)
+    if playlist is None:
+        print(f'The playlist "{name}" does not exists.')
+        return
+
+    yt = YoutubeAPI(db)
+    songs = db.get_playlist_songs(playlist['playlist_id'])
+
+    while True:
+        name = utils.question('Youtube playlist name', default=name).strip()
+        playlist = yt.get_playlist(name)
+        if playlist is None:
+            description = utils.question('Playlist description', default='<empty>')
+            if description == '<empty>':
+                description = ''
+
+            playlist = yt.create_playlist(name, description)
+            break
+
+        print('A Youtube playlist with the same name already exist.')
+        if utils.question_choice("Add the songs to that playlist ?", ['y', 'n']) == 'y':
+            break
+
+    for song in songs:
+        link = song['link']
+        title = song['song_name']
+        if link is None:
+            print(f'The song "{title}" has no Youtube link.')
+            link = utils.question('Give a youtube link for this song or nothing to ignore it.', default='').strip()
+            if not link:
+                print(f'The song "{title}" will not be added to your Youtube playlist.')
+                continue
+
+        try:
+            yt.add_song(playlist, link, note=f'{song["group_name"]} - {title}')
+        except ValueError:
+            print(f'Unable to export the song "{title}". Reason: invalid link.')
+        except RuntimeError as e:
+            print(f'Unable to export the song "{title}". Reason: {e}')
 
 
 def import_playlist(db: DBMuziek, name: str):
