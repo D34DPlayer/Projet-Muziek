@@ -148,7 +148,7 @@ def _choose(query, _type: str, item: str):
     :return: The song chosen by the user.
     """
 
-    if not query:
+    if not query or not isinstance(query, List):
         return query
 
     if len(query) == 1:
@@ -196,3 +196,11 @@ def decode(data: str):
     decomp_byptes = zlib.decompress(decoded_bytes)
     json_str = str(decomp_byptes, "utf-8")
     return json.loads(json_str)
+
+
+def get_info_from_title(title):
+    elements = strip_brackets(title).split('-')
+    if len(elements) < 2:
+        return "Unknown", elements[0]
+    else:
+        return elements[:2]

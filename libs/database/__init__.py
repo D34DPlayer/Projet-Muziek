@@ -240,7 +240,7 @@ class DBMuziek:
 
         :param name: The name of the group.
         :param verbose: If more info should be provided.
-        :return: A Row if the song exists, None if it doesn't.
+        :return: A Row if the group exists, None if it doesn't.
                  If verbose the counts of songs and albums will also be provided.
         """
         group_query = self.execute(db_queries.get_group, (name,)).fetchone()
@@ -326,13 +326,13 @@ class DBMuziek:
         self.execute(db_queries.update_group, (','.join(members), group_id))
 
     def create_song(self, name: str, link: str, genre: str,
-                    duration: int, group_id: int, featuring: List[int]) -> int:
+                    duration: Optional[int], group_id: int, featuring: List[int]) -> int:
         """Creates a new song in the database.
 
         :param name: Name of the song.
         :param link: Link to the song in YouTube.
         :param genre: Genre of the song.
-        :param duration: Duration of the song.
+        :param duration: Duration of the song. Optional.
         :param group_id: Id of the author of the song.
         :param featuring: List of id's for the groups featured in this song.
         :return: Id of the song created.
@@ -345,20 +345,21 @@ class DBMuziek:
         return song_id
 
     def update_song(self, song_id: int, link: str, genre: str,
-                    duration: int, featuring: List[int]):
+                    duration: int, featuring: Optional[List[int]] = None):
         """Updates the information stored for a song in the database.
 
         :param song_id: Id of the song to update.
         :param link: Link to the song in YouTube.
         :param genre: Genre of the song.
         :param duration: Duration of the song.
-        :param featuring: List of id's for the groups featuring this song.
+        :param featuring: List of id's for the groups featuring this song. Optional.
         """
         self.execute(db_queries.update_song, (link, genre, duration, song_id))
 
-        self.execute(db_queries.delete_song_featuring, (song_id,))
-        for featuring_id in featuring:
-            self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
+        if featuring is not None:
+            self.execute(db_queries.delete_song_featuring, (song_id,))
+            for featuring_id in featuring:
+                self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
 
     def create_album(self, name: str, songs: List[int], group_id: int) -> int:
         """Creates a new album in the database.

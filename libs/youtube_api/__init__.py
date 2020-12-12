@@ -127,7 +127,7 @@ class YoutubeAPI:
 
             while data.get('nextPageToken') is not None:
                 params['pageToken'] = data['nextPageToken']
-                with requests.get(URL_PLAYLISTS, params=params, headers=self._token.header) as r:
+                with requests.get(URL_PLAYLISTS, params=params, headers=self._token.headers) as r:
                     data = r.json()
                     self._playlists.extend(Playlist(self._token, **item) for item in data['items'])
 

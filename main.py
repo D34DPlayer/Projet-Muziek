@@ -2,7 +2,7 @@
 
 Usage:
   main.py [-d <PATH>] add (song | group | album)
-  main.py [-d <PATH>] playlist <name> [-e | -i | -s <song>...]
+  main.py [-d <PATH>] playlist <name> [-D | -e | -i | -s <song>...]
   main.py [-d <PATH>] list songs [-g <genre>] [-n <name>] [-G group]
   main.py [-d <PATH>] list group <name>
   main.py [-d <PATH>] list album <name>
@@ -18,6 +18,7 @@ Options:
   -h --help             Show this screen.
   -d --database <PATH>  Path to the local storage [default: muziek.db].
   -s --song <song>      Song(s) to add to the playlist.
+  -D --download         Donwload all the songs included in the playlist.
   -e --export           Exports the playlist.
   -i --import           Imports a playlist with the provided name.
   -g --genre <genre>    Filter the songs listed based on the genre.
@@ -68,6 +69,8 @@ if __name__ == "__main__":
                 cli.list_groups(db)
 
         elif args['playlist']:
+            if args['--download']:
+                cli.download_playlist(db, args["<name>"])
             if args['--import']:
                 cli.import_playlist(db, args['<name>'])
             elif args['--export']:

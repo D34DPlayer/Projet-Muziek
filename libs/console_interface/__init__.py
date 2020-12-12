@@ -343,16 +343,17 @@ def list_playlists(db: DBMuziek):
         print(f" \"{playlist['playlist_name']}\" created by {playlist['author']}")
 
 
-def download_song(db: DBMuziek, name: str):
+def download_song(db: DBMuziek, name: str, group_id: Optional[int] = None):
     """Downloads the song requested based on the url stored in the database.
 
     :author: Carlos
     :param db: The database used.
     :param name: Name of the song to download.
+    :param group_id: Id of the group. Optional.
     """
     downloader = SongDownloader(logger)
 
-    if not (song_query := utils.choose_song(db.get_song(name))):
+    if not (song_query := utils.choose_song(db.get_song(name, group_id))):
         reply = utils.question_choice(f'The song "{name}" doesn\'t. exist yet. Do you want to create it?',
                                       ['y', 'n'])
         if reply == 'y':
@@ -365,6 +366,10 @@ def download_song(db: DBMuziek, name: str):
     if not (video_info := downloader.fetch_song(song_query["link"])):
         print("No video could be found with the provided link. Modify the song entry to change it.")
         return None
+
+    with db.connection:
+        if song_query["duration"] != video_info["duration"]:
+            db.update_song(song_query["song_id"], song_query["link"], song_query["genre"], video_info["duration"])
 
     print('Checking if the song has already been downloaded...')
 
@@ -382,6 +387,24 @@ def download_song(db: DBMuziek, name: str):
 
     print("Download complete.")
     logger.info(f'The song {name} has been downloaded.')
+
+
+def download_playlist(db: DBMuziek, name: str):
+    """Downloads the playlist requested based on the urls stored in the database.
+
+    :author: Carlos
+    :param db: The database used.
+    :param name: Name of the playlist to download.
+    """
+    if not (playlist_query := db.get_playlist(name)):
+        print(f"The playlist {name} doesn't exist.")
+        return
+    if not (songs := db.get_playlist_songs(playlist_query["playlist_id"])):
+        print(f"The playlist {name} is empty.")
+        return
+
+    for song in songs:
+        download_song(db, song["song_name"], song["group_id"])
 
 
 def list_yt_playlist(db: DBMuziek, name: str = None):
@@ -425,7 +448,8 @@ def import_from_yt(db: DBMuziek, name: str):
 
     playlist_id = create_playlist(db, name)[0]
     for song in playlist.songs:
-        author, title = utils.strip_brackets(song.title).split('-')
+        print(f"Video Title: {song.title}")
+        author, title = utils.get_info_from_title(song.title)
         author, title = author.strip(), title.strip()
 
         print(f'Author: {author}')
@@ -442,14 +466,17 @@ def import_from_yt(db: DBMuziek, name: str):
         if utils.question_choice("Would you like to rename the song's title ?", ['y', 'n']) == 'y':
             title = utils.question('Title').strip()
 
-        song_id = db.get_song(title)
+        song_id = db.get_song(title, group_id)
         if song_id is None:
             genre = utils.question("Song's genre").strip()
-            song_id = db.create_song(title, song.url, genre, group_id, [])
+            song_id = db.create_song(title, song.url, genre, None, group_id, [])
         else:
             song_id = song_id['song_id']
 
         db.add_song_playlist(playlist_id, song_id)
+
+        print("Song successfully imported.")
+        logger.info(f"Added song {title} to the playlist {name} from YouTube.")
 
     db.commit()
 
@@ -500,6 +527,8 @@ def export_to_yt(db: DBMuziek, name: str):
             print(f'Unable to export the song "{title}". Reason: invalid link.')
         except RuntimeError as e:
             print(f'Unable to export the song "{title}". Reason: {e}')
+
+    print(f'You can find the exported playlist here : https://www.youtube.com/playlist?list={playlist.id}')
 
 
 def import_playlist(db: DBMuziek, name: str):

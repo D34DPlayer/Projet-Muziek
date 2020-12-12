@@ -104,6 +104,9 @@ def test_choose(monkeypatch, capsys):
     assert u.choose_album(query) is query[0]
     check_print(capsys, "2 albums were found with that name from the groups:\n 1 : Joe\n 2 : Mama\nChoose one [1/2]:\n")
 
+    assert u.choose_album(query[0]) is query[0]
+    assert u.choose_album(None) is None
+
 
 def test_encoding():
     data = {
@@ -122,3 +125,9 @@ def test_strip_brackets():
     assert u.strip_brackets('Music title [OFFICIAL] (remastered)') == 'Music title'
     assert u.strip_brackets('Music title []()') == 'Music title'
     assert u.strip_brackets('Music title {super}') == 'Music title'
+
+
+def test_get_info_from_title():
+    assert u.get_info_from_title('Author - Title [OFFICIAL] (remastered)') == ("Author", "Title")
+    assert u.get_info_from_title('Title [OFFICIAL] (remastered)') == ("Unknown", "Title")
+    assert u.get_info_from_title('Author- Title [OFFICIAL] - LOL') == ("Author", "Title")
