@@ -1,5 +1,6 @@
 import sqlite3
 from typing import Optional, List
+from functools import wraps
 
 from . import db_queries
 
@@ -38,6 +39,34 @@ def fuzy(string: Optional[str]):
     :return: The fuzy string the input string is empty/None.
     """
     return f'%{string.lower()}%' if string else None
+
+
+def db_error(f_name: str, e: Exception):
+    print(f"DB_ERROR: There was an error when trying to {f_name.replace('_', ' ')}.")
+    print(f" {e}")
+
+
+def db_query(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except sqlite3.IntegrityError as e:
+            db_error(f.__name__, e)
+            print(" Are you trying to reference an id that doesn't exist?")
+            return None
+        except sqlite3.NotSupportedError as e:
+            db_error(f.__name__, e)
+            print(" One feature isn't supported by your local database.")
+            return None
+        except sqlite3.ProgrammingError as e:
+            db_error(f.__name__, e)
+            print(" The query was invalid.")
+            return None
+        except sqlite3.DatabaseError as e:
+            db_error(f.__name__, e)
+            return None
+    return decorated
 
 
 class DBMuziek:
@@ -102,6 +131,7 @@ class DBMuziek:
         """
         self._connection.commit()
 
+    @db_query
     def validate_tables(self):
         """Checks if the expected tables exist in the database and creates them if they don't.
 
@@ -131,6 +161,7 @@ class DBMuziek:
 
         return output
 
+    @db_query
     def table_exists(self, name: str) -> int:
         """Checks if a table exist in the database.
 
@@ -140,6 +171,7 @@ class DBMuziek:
         result = self.execute(db_queries.table_exists, (name,))
         return result.fetchone()[0]
 
+    @db_query
     def foreign_keys(self) -> int:
         """Checks if foreign_keys are enabled in sqlite.
 
@@ -148,6 +180,7 @@ class DBMuziek:
         result = self.execute(db_queries.foreign_keys)
         return result.fetchone()[0]
 
+    @db_query
     def count_songs(self, filters: dict = None):
         """Returns the amount of songs, after being filtered.
 
@@ -170,6 +203,7 @@ class DBMuziek:
 
         return self.execute(query, params).fetchone()[0]
 
+    @db_query
     def get_playlist(self, name: str):
         """Obtains a playlist from the database based on its name.
 
@@ -178,6 +212,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_playlist, (name,)).fetchone()
 
+    @db_query
     def get_playlists(self):
         """Obtains a list with all the playlists created.
 
@@ -185,6 +220,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_playlists).fetchall()
 
+    @db_query
     def get_song(self, song_name: str, group_id: Optional[str] = None):
         """Obtains a song from the database based on its name, and optionally its group name.
 
@@ -197,6 +233,7 @@ class DBMuziek:
         else:
             return self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
 
+    @db_query
     def get_song_featuring(self, song_id: int):
         """Obtains the groups featured in a song.
 
@@ -205,6 +242,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_song_featuring, (song_id,)).fetchall()
 
+    @db_query
     def get_songs(self, filters: dict = None, offset: int = 0, limit: int = 50):
         """Obtains a defined amount of songs, after being filtered.
 
@@ -234,6 +272,7 @@ class DBMuziek:
 
         return songs
 
+    @db_query
     def get_group(self, name: str, verbose: bool = False):
         """Obtains a group from the database based on its name,
         will return even more info about it if requested.
@@ -251,6 +290,7 @@ class DBMuziek:
             albums = self.execute(db_queries.count_group_albums, (group_query["group_id"],)).fetchone()["count"]
             return group_query, songs, albums
 
+    @db_query
     def get_album(self, name: str, group_id: Optional[int] = None):
         """Obtains an album from the database based on its name.
 
@@ -264,6 +304,7 @@ class DBMuziek:
         else:
             return self.execute(db_queries.get_album, (name,)).fetchall()
 
+    @db_query
     def get_album_songs(self, album_id: int):
         """Obtains a list with all the songs an album contains.
 
@@ -277,6 +318,7 @@ class DBMuziek:
 
         return songs
 
+    @db_query
     def add_song_playlist(self, playlist_id: int, song_id: int):
         """Adds an existing song to an existing playlist.
 
@@ -286,6 +328,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.add_song_playlist, (playlist_id, song_id))
 
+    @db_query
     def get_playlist_songs(self, playlist_id: int):
         """Returns the songs contained in a playlist.
 
@@ -299,6 +342,7 @@ class DBMuziek:
 
         return songs
 
+    @db_query
     def create_playlist(self, name: str, author: str) -> int:
         """Creates a new playlist in the database.
 
@@ -308,6 +352,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.create_playlist, (name, author)).lastrowid
 
+    @db_query
     def create_group(self, name: str, members: List[str]) -> int:
         """Creates a new group in the database.
 
@@ -317,6 +362,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.create_group, (name, ','.join(members))).lastrowid
 
+    @db_query
     def update_group(self, group_id: int, members: List[str]):
         """Updates the information stored for a group in the database.
 
@@ -325,6 +371,7 @@ class DBMuziek:
         """
         self.execute(db_queries.update_group, (','.join(members), group_id))
 
+    @db_query
     def create_song(self, name: str, link: str, genre: str,
                     duration: Optional[int], group_id: int, featuring: List[int]) -> int:
         """Creates a new song in the database.
@@ -344,6 +391,7 @@ class DBMuziek:
 
         return song_id
 
+    @db_query
     def update_song(self, song_id: int, link: str, genre: str,
                     duration: int, featuring: Optional[List[int]] = None):
         """Updates the information stored for a song in the database.
@@ -361,6 +409,7 @@ class DBMuziek:
             for featuring_id in featuring:
                 self.execute(db_queries.add_song_featuring, (song_id, featuring_id))
 
+    @db_query
     def create_album(self, name: str, songs: List[int], group_id: int) -> int:
         """Creates a new album in the database.
 
@@ -374,6 +423,7 @@ class DBMuziek:
             self.execute(db_queries.add_song_album, (album_id, song_id))
         return album_id
 
+    @db_query
     def update_album(self, album_id: int, songs: List[int]):
         """Updates the information stored for an album in the database.
 
@@ -384,6 +434,7 @@ class DBMuziek:
         for song_id in songs:
             self.execute(db_queries.add_song_album, (album_id, song_id))
 
+    @db_query
     def get_setting(self, key: str, default: str = None) -> str:
         """Returns a stored setting value if it has been saved.
 
@@ -397,6 +448,7 @@ class DBMuziek:
 
         return row["value"]
 
+    @db_query
     def set_setting(self, key: str, value: str):
         """Stores a setting value in the database.
 
@@ -405,6 +457,7 @@ class DBMuziek:
         """
         self.execute(db_queries.set_setting, (key, str(value)))
 
+    @db_query
     def get_albums(self):
         """Obtains a list with all the albums created.
 
@@ -412,6 +465,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_albums).fetchall()
 
+    @db_query
     def get_groups(self):
         """Obtains a list with all the groups created.
 
@@ -419,6 +473,7 @@ class DBMuziek:
         """
         return self.execute(db_queries.get_groups).fetchall()
 
+    @db_query
     def get_genres(self):
         """Obtains a list with all the albums created.
 
