@@ -201,6 +201,6 @@ def decode(data: str):
 def get_info_from_title(title):
     elements = strip_brackets(title).split('-')
     if len(elements) < 2:
-        return "Unknown", elements[0]
+        return "Unknown", elements[0].strip()
     else:
-        return elements[:2]
+        return tuple(el.strip() for el in elements[:2])

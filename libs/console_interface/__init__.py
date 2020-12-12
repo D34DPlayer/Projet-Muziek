@@ -450,7 +450,6 @@ def import_from_yt(db: DBMuziek, name: str):
     for song in playlist.songs:
         print(f"Video Title: {song.title}")
         author, title = utils.get_info_from_title(song.title)
-        author, title = author.strip(), title.strip()
 
         print(f'Author: {author}')
         if utils.question_choice("Would you like to rename the song's author ?", ['y', 'n']) == 'y':
