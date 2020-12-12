@@ -7,9 +7,15 @@ def check_print(capsys, text):
 
 
 def set_input(monkeypatch, text):
+    if not isinstance(text, list):
+        text = [text]
+
+    text_gen = (s for s in text)
+
     def fake_input(x):
         print(x)
-        return text
+        return next(text_gen, None)
+
     monkeypatch.setattr('builtins.input', fake_input)
 
 
