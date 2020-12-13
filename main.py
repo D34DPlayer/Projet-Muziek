@@ -30,7 +30,7 @@ Options:
 
 import docopt
 
-from libs import __version__, console_interface as cli, graphical_interface as gui
+from libs import __version__, console_interface as cli
 from libs.database import DBMuziek
 
 
@@ -86,4 +86,5 @@ if __name__ == "__main__":
                 cli.download_song(db, args['<name>'])
 
         else:
+            from libs import graphical_interface as gui
             gui.run(db)
