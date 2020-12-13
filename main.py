@@ -1,6 +1,7 @@
 """Keep your music organized.
 
 Usage:
+  main.py [-d <PATH>]
   main.py [-d <PATH>] add (song | group | album)
   main.py [-d <PATH>] playlist <name> [-D | -e | -i | -s <song>...]
   main.py [-d <PATH>] list songs [-g <genre>] [-n <name>] [-G group]
@@ -29,7 +30,7 @@ Options:
 
 import docopt
 
-from libs import __version__, console_interface as cli
+from libs import __version__, console_interface as cli, graphical_interface as gui
 from libs.database import DBMuziek
 
 
@@ -83,3 +84,6 @@ if __name__ == "__main__":
         elif args['download']:
             if args['song']:
                 cli.download_song(db, args['<name>'])
+
+        else:
+            gui.run(db)

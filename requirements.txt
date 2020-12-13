@@ -1,5 +1,7 @@
+--pre --extra-index-url https://kivy.org/downloads/simple/
 docopt
 youtube_dl
 requests
 music-tag
 pytest
+kivy[base]
