@@ -1,0 +1,12 @@
+from kivy.uix.popup import Popup
+from kivy.lang.builder import Builder
+
+Builder.load_file('libs/graphical_interface/utils.kv')
+
+
+class ErrorPopup(Popup):
+    def __init__(self, error, **kwargs):
+        super(ErrorPopup, self).__init__(**kwargs)
+
+        self.ids.text_label.text = error
+        self.open()
