@@ -1,4 +1,7 @@
+import os
 from . import utils as u
+from . import add_group
+from ..database import DBMuziek
 
 
 def check_print(capsys, text):
@@ -40,7 +43,7 @@ def test_display_songs(capsys):
             "song_name": "TestSong",
             "duration": 90,
             "group_name": "TestGroup",
-            "featuring": ["ton", "chien"]
+            "featuring": [{"group_name": "ton"}, {"group_name": "chien"}]
         },
         {
             "song_name": "TestSong",
@@ -137,3 +140,28 @@ def test_get_info_from_title():
     assert u.get_info_from_title('Author - Title [OFFICIAL] (remastered)') == ("Author", "Title")
     assert u.get_info_from_title('Title [OFFICIAL] (remastered)') == ("Unknown", "Title")
     assert u.get_info_from_title('Author- Title [OFFICIAL] - LOL') == ("Author", "Title")
+
+
+# TEST CLI
+def test_add_group(monkeypatch):
+    with DBMuziek("cli-test.db") as db:
+        group_data = {
+            "group_name": "TestGroup",
+            "members": ["alt", "bis"]
+        }
+
+        text = [group_data["group_name"],
+                *group_data["members"],
+                "Done"
+                ]
+        set_input(monkeypatch, text)
+        add_group(db)
+
+        group_data_bis = db.get_group(group_data["group_name"])
+
+        assert group_data_bis["members"] == ",".join(group_data["members"])
+        assert group_data_bis["group_name"] == group_data["group_name"]
+
+
+def test_cli_cleanup():
+    os.remove("./cli-test.db")

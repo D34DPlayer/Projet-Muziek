@@ -51,7 +51,7 @@ def display_songs(songs: List):
         if "group_name" in song:                        # group
             text += f' - {song["group_name"]}'
         if "featuring" in song and song["featuring"]:   # featuring
-            text += f' (ft. {", ".join(song["featuring"])})'
+            text += f' (ft. {", ".join([f["group_name"] for f in song["featuring"]])})'
 
         print(text)
 
