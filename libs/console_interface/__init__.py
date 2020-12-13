@@ -1,11 +1,10 @@
-from typing import List, Optional
 import logging
+from typing import List, Optional
 
 from ..database import DBMuziek
 from ..downloader import SongDownloader
 from ..youtube_api import YoutubeAPI
 from . import utils
-
 
 handler = logging.FileHandler("muziek.log", "a", encoding="utf-8")
 formatter = logging.Formatter('[Muziek] %(asctime)s - %(levelname)s - %(message)s')

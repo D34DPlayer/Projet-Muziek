@@ -30,9 +30,9 @@ Options:
 
 import docopt
 
-from libs import __version__, console_interface as cli
+from libs import __version__
+from libs import console_interface as cli
 from libs.database import DBMuziek
-
 
 if __name__ == "__main__":
     args = docopt.docopt(__doc__, version=__version__)

@@ -1,7 +1,7 @@
-import youtube_dl
 import os
-import music_tag
 
+import music_tag
+import youtube_dl
 
 default_config = {
     "quiet": True,

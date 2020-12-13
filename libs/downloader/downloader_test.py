@@ -1,7 +1,9 @@
-from . import SongDownloader
-import pytest
 import os
+
 import music_tag
+import pytest
+
+from . import SongDownloader
 
 
 def test_downloader():

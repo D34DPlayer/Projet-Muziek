@@ -1,5 +1,5 @@
-from kivy.uix.popup import Popup
 from kivy.lang.builder import Builder
+from kivy.uix.popup import Popup
 
 Builder.load_file('libs/graphical_interface/utils.kv')
 

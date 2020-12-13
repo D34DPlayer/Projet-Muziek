@@ -1,5 +1,7 @@
-from . import DBMuziek
 import os
+
+from . import DBMuziek
+
 # import pytest
 
 

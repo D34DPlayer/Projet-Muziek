@@ -1,7 +1,8 @@
-from ..database import DBMuziek
+from kivy.lang.builder import Builder
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
-from kivy.lang.builder import Builder
+
+from ..database import DBMuziek
 from .utils import ErrorPopup
 
 Builder.load_file('libs/graphical_interface/popup_group.kv')

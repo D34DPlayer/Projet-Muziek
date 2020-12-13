@@ -1,5 +1,5 @@
-from .main_window import MainWindow
 from ..database import DBMuziek
+from .main_window import MainWindow
 
 
 def run(db: DBMuziek):

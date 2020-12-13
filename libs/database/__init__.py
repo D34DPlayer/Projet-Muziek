@@ -1,6 +1,6 @@
 import sqlite3
-from typing import Optional, List
 from functools import wraps
+from typing import List, Optional
 
 from . import db_queries
 

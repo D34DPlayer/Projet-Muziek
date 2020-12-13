@@ -1,8 +1,9 @@
-from kivy.uix.popup import Popup
 from kivy.lang.builder import Builder
-from kivy.uix.dropdown import DropDown
-from kivy.uix.button import Button
 from kivy.logger import Logger
+from kivy.uix.button import Button
+from kivy.uix.dropdown import DropDown
+from kivy.uix.popup import Popup
+
 from ..database import DBMuziek
 from ..downloader import SongDownloader
 from .popup_group import PopupGroup

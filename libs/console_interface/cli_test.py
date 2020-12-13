@@ -1,7 +1,8 @@
 import os
-from . import utils as u
-from . import add_group
+
 from ..database import DBMuziek
+from . import add_group
+from . import utils as u
 
 
 def check_print(capsys, text):
