@@ -92,21 +92,21 @@ get_playlist = "SELECT playlist_id, author, name as playlist_name FROM playlists
 get_playlists = "SELECT playlist_id, author, name as playlist_name FROM playlists;"
 
 get_song = '''
-SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
     FROM songs as s
         LEFT JOIN groups g on s.group_id = g.group_id
     WHERE lower(s.name) = lower(?);
 '''
 
 get_song_with_group = '''
-SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
     FROM songs as s
         LEFT JOIN groups g on s.group_id = g.group_id
     WHERE lower(s.name) = lower(?) and g.group_id = ?;
 '''
 
 get_songs = '''
-SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
     FROM songs as s
         LEFT JOIN groups as g ON s.group_id = g.group_id
 '''
@@ -172,7 +172,7 @@ count_group_songs = "SELECT COUNT(song_id) as count FROM songs WHERE group_id = 
 count_group_albums = "SELECT COUNT(album_id) as count FROM albums WHERE group_id = ?;"
 
 get_songs_album = '''
-SELECT a.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre
+SELECT a.song_id as song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
     FROM albumSongs as a
         LEFT JOIN songs as s on a.song_id = s.song_id
         LEFT JOIN groups as g on s.group_id = g.group_id
@@ -198,6 +198,6 @@ SELECT a.name as album_name, g.name as group_name
         LEFT JOIN groups as g on a.group_id = g.group_id;
 """
 
-get_groups = "SELECT name as group_name, members FROM groups;"
+get_groups = "SELECT name as group_name, members, group_id FROM groups;"
 
 get_genres = "SELECT DISTINCT lower(genre) as genre FROM songs;"

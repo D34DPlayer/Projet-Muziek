@@ -229,9 +229,17 @@ class DBMuziek:
         :return: A list of Rows if the song(s) exists, None if it doesn't, only one Row if the group is provided.
         """
         if not group_id:
-            return self.execute(db_queries.get_song, (song_name,)).fetchall()
+            songs = list(map(dict, self.execute(db_queries.get_song, (song_name,)).fetchall()))
+
+            for song in songs:
+                song["featuring"] = self.get_song_featuring(song["song_id"])
+            return songs
         else:
-            return self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
+            song = self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
+            if song:
+                song = dict(song)
+                song["featuring"] = self.get_song_featuring(song["song_id"])
+            return song
 
     @db_query
     def get_song_featuring(self, song_id: int):
@@ -268,7 +276,7 @@ class DBMuziek:
         songs = list(map(dict, self.execute(query, (*params, limit, offset)).fetchall()))
 
         for song in songs:
-            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+            song["featuring"] = self.get_song_featuring(song["song_id"])
 
         return songs
 
@@ -314,7 +322,7 @@ class DBMuziek:
         songs = list(map(dict, self.execute(db_queries.get_songs_album, (album_id,)).fetchall()))
 
         for song in songs:
-            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+            song["featuring"] = self.get_song_featuring(song["song_id"])
 
         return songs
 
@@ -338,7 +346,7 @@ class DBMuziek:
         songs = list(map(dict, self.execute(db_queries.get_playlist_songs, (playlist_id,)).fetchall()))
 
         for song in songs:
-            song["featuring"] = [f["group_name"] for f in self.get_song_featuring(song["song_id"])]
+            song["featuring"] = self.get_song_featuring(song["song_id"])
 
         return songs
 
