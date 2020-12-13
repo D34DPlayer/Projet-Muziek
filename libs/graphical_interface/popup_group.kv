@@ -1,0 +1,40 @@
+<PopupGroup>:
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: [20, 10, 20, 10]
+            Label:
+                text: 'Group name:'
+            TextInput:
+                id: name_input
+                focus: True
+                multiline: False
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: [20, 10, 20, 10]
+            size_hint: (1, 2)
+            id: members_list_container
+            Label:
+                text: 'Members:'
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: 10
+                counter: 1
+                id: members_list
+                TextInput:
+                    id: member1
+                    multiline: False
+                Button:
+                    text: "+"
+                    on_release: root.add_member_field()
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: [20, 10, 20, 10]
+            spacing: 10
+            Button:
+                text: "Cancel"
+                on_release: root.dismiss()
+            Button:
+                text: "Submit"
+                on_release: root.submit_form()
