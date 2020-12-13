@@ -66,6 +66,7 @@ class PopupGroup(Popup):
 
     def update_data(self, data):
         self.ids.name_input.text = data["group_name"]
+        self.ids.name_input.disabled = True
         members_list = self.ids.members_list
 
         if isinstance(data["members"], str):

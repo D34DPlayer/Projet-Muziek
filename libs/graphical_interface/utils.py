@@ -9,4 +9,5 @@ class ErrorPopup(Popup):
         super(ErrorPopup, self).__init__(**kwargs)
 
         self.ids.text_label.text = error
+        self.title = "ERROR"
         self.open()
