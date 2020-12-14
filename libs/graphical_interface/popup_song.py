@@ -1,5 +1,4 @@
 from kivy.lang.builder import Builder
-from kivy.logger import Logger
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.popup import Popup
@@ -24,7 +23,7 @@ class PopupSong(Popup):
 
         self.add_featuring_field()
 
-        self._update_id = update_data["song_id"] if update_data else None
+        self._update_id = None
         if update_data:
             self.update_data(update_data)
             self.title = "Modify a song"
@@ -32,7 +31,7 @@ class PopupSong(Popup):
             self.title = "Create a song"
 
     def submit_form(self):
-        dl = SongDownloader(Logger)
+        dl = SongDownloader()
         data = self.validate_form()
         if data:
             with self._db.connection:
@@ -51,7 +50,7 @@ class PopupSong(Popup):
     def add_featuring_field(self):
         featuring_list = self.ids.featuring_list
 
-        featuring_input = GroupDropdown(self._db, text="<Choice>")
+        featuring_input = GroupDropdown(self._db)
         featuring_list.add_widget(featuring_input, 1)
 
         featuring_list.counter += 1
@@ -59,7 +58,7 @@ class PopupSong(Popup):
         self.ids.featuring_list_container.size_hint = (1, featuring_list.counter + 1)
 
     def validate_form(self):
-        downloader = SongDownloader(Logger)
+        downloader = SongDownloader()
 
         buffer = {}
         name_input = self.ids.name_input
@@ -68,16 +67,16 @@ class PopupSong(Popup):
         genre_input = self.ids.genre_input
         link_input = self.ids.link_input
 
-        if group_input.choice is None:
+        if group_input.group_id is None:
             ErrorPopup('No group was provided.')
             return None
 
-        buffer["group_id"] = group_input.choice
+        buffer["group_id"] = group_input.group_id
 
         if not name_input.text:
             ErrorPopup("No name provided.")
             return None
-        elif not self._update_id and self._db.get_song(name_input.text, group_input.choice):
+        elif not self._update_id and self._db.get_song(name_input.text, group_input.group_id):
             ErrorPopup("The song already exists.")
             return None
 
@@ -99,29 +98,37 @@ class PopupSong(Popup):
         buffer["link"] = link_input.text
         buffer["duration"] = video_info["duration"]
 
-        featuring = [self.ids[f"feat{i + 1}"].choice
+        featuring = [self.ids[f"feat{i + 1}"].group_id
                      for i in range(featuring_list.counter)
-                     if self.ids[f"feat{i + 1}"].choice and
-                     self.ids[f"feat{i + 1}"].choice != group_input.choice]
+                     if self.ids[f"feat{i + 1}"].group_id and
+                     self.ids[f"feat{i + 1}"].group_id != group_input.group_id]
 
         buffer["featuring"] = list(set(featuring))
 
         return buffer
 
     def update_data(self, data):
-        self.ids.name_input.text = data["song_name"]
-        self.ids.name_input.disabled = True
-        self.ids.genre_input.text = data["genre"]
-        self.ids.link_input.text = data["link"]
-        self.ids.group_input.update_data(data)
-        self.ids.group_input.disabled = True
-        featuring_list = self.ids.featuring_list
+        if "song_id" in data:
+            self._update_id = data["song_id"]
+        if "song_name" in data:
+            self.ids.name_input.text = data["song_name"]
+            self.ids.name_input.disabled = True
+        if "genre" in data:
+            self.ids.genre_input.text = data["genre"]
+        if "link" in data:
+            self.ids.link_input.text = data["link"]
+        if "group_id" in data:
+            self.ids.group_input.update_data(data)
+            self.ids.group_input.disabled = True
 
-        for i, featuring in enumerate(data["featuring"], 1):
-            if i > featuring_list.counter:
-                self.add_featuring_field()
+        if "featuring" in data:
+            featuring_list = self.ids.featuring_list
 
-            self.ids[f"feat{i}"].update_data(featuring)
+            for i, featuring in enumerate(data["featuring"], 1):
+                if i > featuring_list.counter:
+                    self.add_featuring_field()
+
+                self.ids[f"feat{i}"].update_data(featuring)
 
 
 class GroupDropdown(Button):
@@ -130,7 +137,7 @@ class GroupDropdown(Button):
 
         self.dropdown = DropDown()
 
-        self.choice = None
+        self.group_id = None
         self.text = "<Choice>"
 
         self.update_data(default)
@@ -144,21 +151,21 @@ class GroupDropdown(Button):
 
     def update_data(self, data):
         if data:
-            self.choice = data["group_id"]
+            self.group_id = data["group_id"]
             self.text = data["group_name"]
 
-    def reset_choice(self, dd):
+    def reset_choice(self, dd=None):
         if dd:
             dd.dismiss()
         self.text = "<Choice>"
-        self.choice = None
+        self.group_id = None
 
     def update_groups(self):
         self.groups = self._db.get_groups()
         self.dropdown.clear_widgets()
 
         btn = Button(text="<Choice>", size_hint_y=None, height=44)
-        btn.bind(on_release=lambda _: self.reset_choice(self.dropdown))
+        btn.bind(on_release=lambda _: self.reset_select())
         self.dropdown.add_widget(btn)
 
         for group in self.groups:
@@ -172,13 +179,18 @@ class GroupDropdown(Button):
         btn.bind(on_release=lambda _: summon_popup_group(self._db, self.dropdown))
         self.dropdown.add_widget(btn)
 
+    def reset_select(self):
+        self.reset_choice()
+        self.dropdown.select(None)
+
     def open(self, btn):
         self.update_groups()
         self.dropdown.open(btn)
 
-    def on_select(self, btn):
-        self.text = btn.text
-        self.choice = btn.group_id
+    def on_select(self, btn=None):
+        if btn is not None:
+            self.text = btn.text
+            self.group_id = btn.group_id
 
 
 class GroupButton(Button):
