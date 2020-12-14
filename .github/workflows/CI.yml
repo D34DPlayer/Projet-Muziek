@@ -1,9 +1,30 @@
-name: Testing with pytest and coverage repport
+name: CI
 
 on: [push, pull_request]
 
 jobs:
-  run:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9']
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          pip install flake8
+          pip install -r requirements.txt
+      - name: Lint with flake8
+        run: |
+          flake8 --count --statistics
+
+  test:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       matrix:
