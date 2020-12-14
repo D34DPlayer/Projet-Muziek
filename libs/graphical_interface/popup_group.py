@@ -12,7 +12,8 @@ class PopupGroup(Popup):
     def __init__(self, db: DBMuziek, update_data=None, **kwargs):
         super(PopupGroup, self).__init__(**kwargs)
         self._db = db
-        self._update_id = update_data["group_id"] if update_data else None
+
+        self._update_id = None
         if update_data:
             self.update_data(update_data)
             self.title = "Modify a group"
@@ -66,17 +67,22 @@ class PopupGroup(Popup):
         self.ids.members_list_container.size_hint = (1, members_list.counter + 1)
 
     def update_data(self, data):
-        self.ids.name_input.text = data["group_name"]
-        self.ids.name_input.disabled = True
-        members_list = self.ids.members_list
+        if "group_id" in data:
+            self._update_id = data["group_id"]
+        if "group_name" in data:
+            self.ids.name_input.text = data["group_name"]
+            self.ids.name_input.disabled = True
 
-        if isinstance(data["members"], str):
-            members = data["members"].split(",")
-        else:
-            members = data["members"]
+        if "members" in data:
+            members_list = self.ids.members_list
 
-        for i, member in enumerate(members, 1):
-            if i > members_list.counter:
-                self.add_member_field()
+            if isinstance(data["members"], str):
+                members = data["members"].split(",")
+            else:
+                members = data["members"]
 
-            self.ids[f"member{i}"].text = member
+            for i, member in enumerate(members, 1):
+                if i > members_list.counter:
+                    self.add_member_field()
+
+                self.ids[f"member{i}"].text = member
