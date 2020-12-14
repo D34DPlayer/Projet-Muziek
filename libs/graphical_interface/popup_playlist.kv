@@ -1,0 +1,23 @@
+<FormElement@BoxLayout>:
+    orientation: 'horizontal'
+    padding: [20, 10, 20, 10]
+
+<PopupPlaylist>:
+    title: "Create a playlist:"
+    BoxLayout:
+        orientation: 'vertical'
+        FormElement:
+            Label:
+                text: 'Playlist name:'
+            TextInput:
+                id: name_input
+                focus: True
+                multiline: False
+        FormElement:
+            spacing: 10
+            Button:
+                text: "Cancel"
+                on_release: root.dismiss()
+            Button:
+                text: "Submit"
+                on_release: root.submit_form()
