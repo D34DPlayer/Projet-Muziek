@@ -4,4 +4,4 @@ from .main_window import MainWindow
 
 def run(db: DBMuziek):
     print(db.connection)
-    MainWindow().run()
+    MainWindow(db).run()

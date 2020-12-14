@@ -1,0 +1,41 @@
+<Root>:
+    cols: 2
+    StackLayout:
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        orientation: 'lr-tb'
+        size_hint_x: None
+        width: 150
+        padding: 5
+
+        Button:
+            size_hint_y: None
+            height: 30
+            text: 'Groups'
+            on_release: root.display_groups()
+
+        Button:
+            size_hint_y: None
+            height: 30
+            text: 'Songs'
+            on_release: root.display_songs()
+
+        Button:
+            size_hint_y: None
+            height: 30
+            text: 'Albums'
+            on_release: root.display_albums()
+
+        Button:
+            size_hint_y: None
+            height: 30
+            text: 'Playlists'
+            on_release: root.display_playlists()
+
+    BoxLayout:
+        id: content
