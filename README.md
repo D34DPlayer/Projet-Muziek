@@ -1,5 +1,6 @@
 # Muziek
 [![codecov](https://codecov.io/gh/D34DPlayer/Projet-Muziek/branch/master/graph/badge.svg)](https://codecov.io/gh/D34DPlayer/Projet-Muziek)
+[![CI](https://github.com/D34DPlayer/Projet-Muziek/workflows/CI/badge.svg)](https://github.com/D34DPlayer/Projet-Muziek/actions?query=workflow%3ACI)
 
 Muziek is the music library management application for YouTube users.
 
