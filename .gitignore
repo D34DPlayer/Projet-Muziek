@@ -13,3 +13,6 @@ __pycache__/
 *.sublime-project
 *.sublime-workspace
 
+# pyinstaller
+dist/
+build/
