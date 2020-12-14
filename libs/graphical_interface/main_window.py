@@ -5,9 +5,7 @@ import os
 from kivy.app import App
 from kivy.lang.builder import Builder
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-from kivy.uix.button import Button
 from typing import List
 from ..database import DBMuziek, format_duration
 

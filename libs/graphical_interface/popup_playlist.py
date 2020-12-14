@@ -2,7 +2,6 @@ from kivy.uix.popup import Popup
 from kivy.lang.builder import Builder
 
 from ..database import DBMuziek
-from .popup_song import GroupDropdown, PopupSong
 from .utils import ErrorPopup
 from ..console_interface import create_playlist
 

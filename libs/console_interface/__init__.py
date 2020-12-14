@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from ..logger import get_logger
-from ..database import DBMuziek, format_duration
+from ..database import DBMuziek
 from ..downloader import SongDownloader
 from ..youtube_api import YoutubeAPI
 from . import utils
