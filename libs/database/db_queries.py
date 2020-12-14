@@ -117,6 +117,8 @@ append_name = "lower(s.name) LIKE lower(?)"
 
 append_group = "lower(g.name) LIKE lower(?)"
 
+append_group_id = "g.group_id = ?"
+
 paging = "LIMIT ? OFFSET ?"
 
 get_group = '''

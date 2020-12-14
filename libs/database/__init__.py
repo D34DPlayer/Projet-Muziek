@@ -310,7 +310,8 @@ class DBMuziek:
         default = {
             "genre": None,
             "name": None,
-            "group": None
+            "group": None,
+            "group_id": None
         }
 
         if filters:
@@ -319,7 +320,8 @@ class DBMuziek:
         genre = (db_queries.append_genre, default["genre"])
         name = (db_queries.append_name, fuzy(default["name"]))
         group = (db_queries.append_group, fuzy(default["group"]))
-        query, params = query_append(db_queries.get_songs, db_queries.paging, genre, name, group)
+        group_id = (db_queries.append_group_id, default["group_id"])
+        query, params = query_append(db_queries.get_songs, db_queries.paging, genre, name, group, group_id)
 
         songs = list(map(dict, self.execute(query, (*params, limit, offset)).fetchall()))
 
