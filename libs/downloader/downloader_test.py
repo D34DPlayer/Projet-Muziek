@@ -8,7 +8,7 @@ from . import SongDownloader
 
 def test_downloader():
     # DOWNLOADER START
-    downloader = SongDownloader(None, {"download_dir": "./test_songs"})
+    downloader = SongDownloader({"download_dir": "./test_songs"})
 
     assert os.path.isdir("./test_songs") is True
 
