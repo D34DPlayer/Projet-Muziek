@@ -33,8 +33,11 @@ import docopt
 from libs import __version__
 from libs import console_interface as cli
 from libs.database import DBMuziek
+from libs.logger import setup_logger
 
 if __name__ == "__main__":
+    setup_logger()
+
     args = docopt.docopt(__doc__, version=__version__)
     filters = {k.lstrip('-'): v for k, v in args.items() if k.startswith('--')}
 

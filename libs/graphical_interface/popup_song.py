@@ -114,6 +114,7 @@ class PopupSong(Popup):
         self.ids.genre_input.text = data["genre"]
         self.ids.link_input.text = data["link"]
         self.ids.group_input.update_data(data)
+        self.ids.group_input.disabled = True
         featuring_list = self.ids.featuring_list
 
         for i, featuring in enumerate(data["featuring"], 1):
@@ -145,7 +146,6 @@ class GroupDropdown(Button):
         if data:
             self.choice = data["group_id"]
             self.text = data["group_name"]
-            self.disabled = True
 
     def reset_choice(self, dd):
         if dd:
