@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import music_tag
 import pytest
@@ -73,7 +74,7 @@ def test_downloader():
 
     # GET SONG PATH
 
-    assert downloader.get_song_path(song_data["song_id"]) == song_path
+    assert Path(downloader.get_song_path(song_data["song_id"])) == Path(song_path)
     assert downloader.get_song_path(song_data["song_id"] + 2) is None
 
     # SONG DELETE
