@@ -1,4 +1,6 @@
 import math
+import glob
+import os
 
 from kivy.app import App
 from kivy.lang.builder import Builder
@@ -8,8 +10,6 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from typing import List
 from ..database import DBMuziek, format_duration
-
-Builder.load_file('libs/graphical_interface/main_window.kv')
 
 
 class PageLayout(BoxLayout):
@@ -124,6 +124,9 @@ class Root(BoxLayout):
 
 class MainWindow(App):
     def __init__(self, db: DBMuziek, **kwargs):
+        for file in glob.glob(os.path.join(os.path.dirname(__file__), '*.kv')):
+            Builder.load_file(file)
+
         super().__init__(**kwargs)
         self._db = db
         self.root = None
