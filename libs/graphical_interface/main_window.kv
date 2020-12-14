@@ -39,3 +39,37 @@
 
     BoxLayout:
         id: content
+
+<PageLayout>:
+    orientation: 'vertical'
+    BoxLayout:
+        id: header
+        height: 30
+        size_hint_y: None
+
+    StackLayout:
+        id: body
+
+    AnchorLayout:
+        id: footer
+        height: 30
+        anchor_x: 'center'
+        anchor_y: 'bottom'
+        size_hint_y: None
+        BoxLayout:
+            Label:
+                text: ''
+            Button:
+                width: 50
+                size_hint_x: None
+                text: 'prev'
+                on_release: root.page -= 1
+            Label:
+                id: page_index
+            Button:
+                width: 50
+                size_hint_x: None
+                text: 'next'
+                on_release: root.page += 1
+            Label:
+                text: ''
