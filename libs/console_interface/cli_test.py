@@ -83,12 +83,6 @@ def test_question_choice(monkeypatch, capsys):
     check_print(capsys, "TeSt [y/n]:\n")
 
 
-def test_format_duration():
-    assert u.format_duration(59) == "0:59"
-    assert u.format_duration(326) == "5:26"
-    assert u.format_duration(None) == "??:??"
-
-
 def test_pagination(monkeypatch, capsys):
     set_input(monkeypatch, '4')
     assert u.pagination(20, 8) == 4

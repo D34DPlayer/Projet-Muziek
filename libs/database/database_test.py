@@ -1,6 +1,6 @@
 import os
 
-from . import DBMuziek
+from . import DBMuziek, format_duration
 
 # import pytest
 
@@ -231,3 +231,9 @@ def test_database():
 
 def test_database_cleanup():
     os.remove("./temp.db")
+
+
+def test_format_duration():
+    assert format_duration(59) == "0:59"
+    assert format_duration(326) == "5:26"
+    assert format_duration(None) == "??:??"

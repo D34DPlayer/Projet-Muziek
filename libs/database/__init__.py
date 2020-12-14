@@ -8,6 +8,13 @@ from . import db_queries
 logger = get_logger("db")
 
 
+def format_duration(duration: int = None):
+    if duration is None:
+        return '??:??'
+
+    return '{}:{}'.format(*divmod(duration, 60))
+
+
 def query_append(prefix: str, suffix: str, *args):
     """This function generates an SQL query out of smaller blocks, only adding those that are needed.
 

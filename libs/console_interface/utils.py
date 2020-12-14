@@ -5,6 +5,7 @@ import math
 import re
 import zlib
 from typing import List
+from ..database import format_duration
 
 getuser = getpass.getuser
 
@@ -73,13 +74,6 @@ def question_choice(name: str, choices: List[str]):
     while result not in choices:
         result = input(f"{name} [{'/'.join(choices)}]:")
     return result
-
-
-def format_duration(duration: int = None):
-    if duration is None:
-        return '??:??'
-
-    return '{}:{}'.format(*divmod(duration, 60))
 
 
 def pagination(total: int, page: int) -> int:
