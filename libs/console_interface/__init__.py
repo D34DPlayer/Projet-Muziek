@@ -1,17 +1,12 @@
-import logging
 from typing import List, Optional
 
+from ..logger import get_logger
 from ..database import DBMuziek
 from ..downloader import SongDownloader
 from ..youtube_api import YoutubeAPI
 from . import utils
 
-handler = logging.FileHandler("muziek.log", "a", encoding="utf-8")
-formatter = logging.Formatter('[Muziek] %(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger = logging.getLogger("cli")
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger = get_logger("cli")
 
 
 def add_song(db: DBMuziek, name: Optional[str] = None, group_id: Optional[int] = None):
@@ -19,11 +14,13 @@ def add_song(db: DBMuziek, name: Optional[str] = None, group_id: Optional[int] =
         There's also the option to modify a song that already exists in the database,
         and to create the group if it doesn't exist yet.
 
-        :author: Carlos
-        :param db: The database used.
-        :param name: The name of the song.
-        :param group_id: The name of the group who made the song.
-        :return: The id of the created/modified group. None if nothing was created/modified.
+    :author: Carlos
+    :param db: The database used.
+    :param name: The name of the song. Optional.
+    :param group_id: The name of the group who made the song. Optional.
+    :PRE: The database object needs to be connected.
+    :POST: Asks the user of the relevant info and creates/modifies a song.
+           Returns the id of the created/modified song. None if nothing was created/modified.
     """
     if not name:
         name = utils.question("Name")
@@ -98,12 +95,14 @@ def add_song(db: DBMuziek, name: Optional[str] = None, group_id: Optional[int] =
 
 def add_song_playlist(db: DBMuziek, name: str, songs: List[str]):
     """Add a list of songs to a playlist, will create the playlist if needed.
-    If a song doesn't exist yet, the user can create it diretly if they want to.
+        If a song doesn't exist yet, the user can create it diretly if they want to.
 
     :author: Mathieu
     :param db: The database used.
     :param name: The name of the playlist.
     :param songs: List of names of songs to add to the playlist.
+    :PRE: The database object needs to be connected.
+    :POST: The playlist will be created if it doesn't exist and the songs will be added to it.
     """
     playlist = db.get_playlist(name)
     if playlist is None:
@@ -133,8 +132,10 @@ def add_group(db: DBMuziek, name: Optional[str] = None):
 
     :author: Carlos
     :param db: The database used.
-    :param name: The name of the group.
-    :return: The id of the created/modified group. None if nothing was created/modified.
+    :param name: The name of the group. Optional.
+    :PRE: The database object needs to be connected.
+    :POST: Asks the user of the relevant info and creates/modifies a group.
+           Returns the id of the created/modified group. None if nothing was created/modified.
     """
     if not name:
         name = utils.question("Name")
@@ -175,7 +176,9 @@ def add_album(db: DBMuziek, name: Optional[str] = None):
     :author: Carlos
     :param db: The database used.
     :param name: The name of the album.
-    :return: The id of the created/modified album. None if nothing was created.
+    :PRE: The database object needs to be connected.
+    :POST: Asks the user of the relevant info and creates/modifies a album.
+           Returns the id of the created/modified album. None if nothing was created.
     """
     if not name:
         name = utils.question("Name")
@@ -225,12 +228,14 @@ def add_album(db: DBMuziek, name: Optional[str] = None):
     return album_id
 
 
-def list_songs(db: DBMuziek, filters: dict):
+def list_songs(db: DBMuziek, filters: Optional[dict] = None):
     """List all songs from the database and display it on the screen with pagination.
 
-        :author: Mathieu
-        :param db: The database used.
-        :param filters: The filters to apply before listing.
+    :author: Mathieu
+    :param db: The database used.
+    :param filters: The filters to apply before listing. Optional
+    :PRE: The database object needs to be connected.
+    :POST: Shows all the songs that match the filters.
     """
     # Make pages of 20 songs
     pages, rem = divmod(db.count_songs(filters), 20)
@@ -249,6 +254,8 @@ def list_group(db: DBMuziek, name: str):
     :author: Carlos
     :param db: The database used.
     :param name: The name of the group.
+    :PRE: The database object needs to be connected.
+    :POST: Shows information about the group requested.
     """
     if not (group_query := db.get_group(name, True)):
         reply = utils.question_choice(f'The group "{name}" doesn\'t. exist yet. Do you want to create it?',
@@ -273,6 +280,8 @@ def list_album(db: DBMuziek, name: str):
     :author: Carlos
     :param db: The database used.
     :param name: The name of the album.
+    :PRE: The database object needs to be connected.
+    :POST: Shows information about the album requested.
     """
     if not (album_query := utils.choose_album(db.get_album(name))):
         reply = utils.question_choice(f'The album "{name}" doesn\'t. exist yet. Do you want to create it?',
@@ -300,6 +309,8 @@ def list_playlist(db: DBMuziek, name: str):
     :author: Mathieu
     :param db: The database used.
     :param name: The playlist's name.
+    :PRE: The database object needs to be connected.
+    :POST: Shows information about the playlist requested and creates it if needed.
     """
     playlist = db.get_playlist(name)
     if playlist is None:
@@ -323,7 +334,9 @@ def create_playlist(db: DBMuziek, name: str, author: Optional[str] = None) -> (i
     :param db: The database used.
     :param name: The playlist's name.
     :param author: The author, optional.
-    :return: The playlist's id and its author.
+    :PRE: The database object needs to be connected, the playlist name must be unique in the database.
+    :POST: Creates a playlist with the provided data.
+           Returns the playlist's id, its author and its name.
     """
     if not author:
         author = utils.getuser()
@@ -334,9 +347,18 @@ def create_playlist(db: DBMuziek, name: str, author: Optional[str] = None) -> (i
 
 
 def list_playlists(db: DBMuziek):
+    """Lists all the playlists stored.
+
+    :param db: The database used.
+    :PRE: The database object needs to be connected.
+    :POST: Shows a list of all the playlists.
+    """
     playlists = db.get_playlists()
 
     print(f"You have {len(playlists)} playlists:")
+
+    if not playlists:
+        print(" <empty>")
 
     for playlist in playlists:
         print(f" \"{playlist['playlist_name']}\" created by {playlist['author']}")
@@ -349,6 +371,8 @@ def download_song(db: DBMuziek, name: str, group_id: Optional[int] = None):
     :param db: The database used.
     :param name: Name of the song to download.
     :param group_id: Id of the group. Optional.
+    :PRE: The database object needs to be connected.
+    :POST: The song requested is downloaded.
     """
     downloader = SongDownloader(logger)
 
@@ -394,6 +418,8 @@ def download_playlist(db: DBMuziek, name: str):
     :author: Carlos
     :param db: The database used.
     :param name: Name of the playlist to download.
+    :PRE: The database object needs to be connected.
+    :POST: All the songs in the playlist are downloaded
     """
     if not (playlist_query := db.get_playlist(name)):
         print(f"The playlist {name} doesn't exist.")
@@ -406,12 +432,14 @@ def download_playlist(db: DBMuziek, name: str):
         download_song(db, song["song_name"], song["group_id"])
 
 
-def list_yt_playlist(db: DBMuziek, name: str = None):
+def list_yt_playlist(db: DBMuziek, name: Optional[str] = None):
     """Lists your Youtube playlists.
 
     :author: Mathieu
     :param db: The database used.
-    :param name: If not None, will list all songs from that playlist.
+    :param name: Name of the playlist. Optional.
+    :PRE: The database object needs to be connected.
+    :POST: Connects you to YT and lists all your existing playlists there, or the specific one if the name is provided.
     """
     yt = YoutubeAPI(db)
     for playlist in yt.playlists:
@@ -434,6 +462,9 @@ def import_from_yt(db: DBMuziek, name: str):
     :author: Mathieu
     :param db: The database used.
     :param name: The Youtube playlist to import.
+    :PRE: The database object needs to be connected.
+    :POST: If the playlist exists on YT,
+           it'll import it to the local database with the help of the user to get the information right.
     """
     if db.get_playlist(name) is not None:
         print(f'The playlist "{name}" already exists.')
@@ -485,6 +516,9 @@ def export_to_yt(db: DBMuziek, name: str):
     :author: Mathieu
     :param db: The database used.
     :param name: The playlist to export.
+    :PRE: The database object needs to be connected.
+    :POST: A playlist will be created in YT and the songs in the local playlist will be appended,
+           if the local playlist doesn't exist the playlist will be empty.
     """
     playlist = db.get_playlist(name)
     if playlist is None:
@@ -530,6 +564,14 @@ def export_to_yt(db: DBMuziek, name: str):
 
 
 def import_playlist(db: DBMuziek, name: str):
+    """Imports a playlist that has been exported from this app.
+
+    :param db: The database used.
+    :param name: Name to store the playlist as.
+    :PRE: The database object needs to be connected.
+    :POST: If the playlist doesn't exist already, it'll be created with the exported content,
+           groups and songs will be created if needed.
+    """
     if db.get_playlist(name):
         print(f"The playlist {name} already exists.")
         return
@@ -565,6 +607,14 @@ def import_playlist(db: DBMuziek, name: str):
 
 
 def export_playlist(db: DBMuziek, name: str):
+    """Exports a playlist to be imported by this app.
+
+    :param db: The database used.
+    :param name: Name of the playlist to export.
+    :PRE: The database object needs to be connected.
+    :POST: If the playlist exists, it'll be exported,
+           the information about the songs and groups will be included as well.
+    """
     buffer = {
         "groups": [],
         "songs": [],
@@ -625,18 +675,36 @@ def export_playlist(db: DBMuziek, name: str):
 
 
 def list_groups(db: DBMuziek):
+    """Lists all the existing groups in the database.
+
+    :param db: The database used.
+    :PRE: The database object needs to be connected.
+    :POST: Shows a list of the existing groups.
+    """
     groups = db.get_groups()
 
     print(f"You have {len(groups)} groups:")
+
+    if not groups:
+        print("<empty>")
 
     for group in groups:
         print(f"{group['group_name']}")
 
 
 def list_albums(db: DBMuziek):
+    """Lists all the existing albums in the database.
+
+    :param db: The database used.
+    :PRE: The database object needs to be connected.
+    :POST: Shows a list of the existing albums.
+    """
     albums = db.get_albums()
 
     print(f"You have {len(albums)} albums:")
+
+    if not albums:
+        print("<empty>")
 
     for album in albums:
         print(f"{album['album_name']} by {album['group_name']}")

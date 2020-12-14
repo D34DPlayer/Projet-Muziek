@@ -3,6 +3,8 @@ import os
 import music_tag
 import youtube_dl
 
+from ..logger import get_logger
+
 default_config = {
     "quiet": True,
     "format": "bestaudio/best",
@@ -16,18 +18,19 @@ default_config = {
     "no_color": True
 }
 
+logger = get_logger("yt-DL")
+
 
 class SongDownloader(youtube_dl.YoutubeDL):
-    def __init__(self, logger=None, config: dict = {}):
+    def __init__(self, config=None):
         """Creates the SongDownloader object with the settings provided.
 
         :author: Carlos
-        :param logger: The logger the logging messages will be sent to.
         :param config: The SongDownloader configuration.
         """
-        self._config = {**default_config, **config}
-        if logger:
-            self._config["logger"] = logger
+        if config is None:
+            config = {}
+        self._config = {**default_config, **config, "logger": logger}
 
         self._video_info = None
         if not os.path.exists(self._config["download_dir"]):
@@ -40,7 +43,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param url: The url of the video.
-        :return: A dict with the video information if the url is correct, None if the url isn't.
+        :PRE: _
+        :POST: Returns a dict with the video information if the url is correct, None if the url isn't.
         """
         info = self.extract_info(url=url, download=False)
         self._video_info = info
@@ -54,6 +58,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param song_data: The information about the song stored in the database.
+        :PRE: An url must have been fetched before.
+        :POST: The song is downloaded to the right spot.
         :raises ValueError if there hasn't been a fetch_song before.
         """
         if not self._video_info:
@@ -76,7 +82,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param song_id: The song to check.
-        :return: True if the song has already been downloaded, False otherwise.
+        :PRE: _
+        :POST: Returns True if the song has already been downloaded, False otherwise.
         """
         download_folder = os.path.join(self._config["download_dir"], str(song_id))
         return os.path.isdir(download_folder) and bool(os.listdir(download_folder))
@@ -86,6 +93,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param song_id: The id of the song to delete.
+        :PRE: _
+        :POST: The song will be deleted if it has been downloaded.
         """
         song_path = self.get_song_path(song_id)
         if song_path:
@@ -96,6 +105,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param song_data: The information about the song stored in the database.
+        :PRE: _
+        :POST: The song metadata will be updated if it exists.
         """
         song_path = self.get_song_path(song_data["song_id"])
 
@@ -111,7 +122,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param song_id: The if of the song to look up.
-        :return: The path if the song has been downlaoded, None otherwise
+        :PRE: _
+        :POST: Returns the path if the song has been downlaoded, None otherwise.
         """
         if not self.is_downloaded(song_id):
             return None
@@ -126,7 +138,8 @@ class SongDownloader(youtube_dl.YoutubeDL):
 
         :author: Carlos
         :param item: the key to the item to get.
-        :return: None if no video has been fetched, the item from the video_info otherwise.
+        :PRE: _
+        :POST: Returns None if no video has been fetched, the item from the video_info otherwise.
         """
         if not self._video_info:
             return None

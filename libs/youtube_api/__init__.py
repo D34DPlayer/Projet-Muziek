@@ -1,14 +1,15 @@
-import logging
+
 import re
 from typing import List, Optional
 from urllib.parse import urlparse
 
 import requests
 
+from ..logger import get_logger
 from ..database import DBMuziek
 from .oauth2 import Token
 
-logger = logging.getLogger('youtube-api')
+logger = get_logger('youtube-api')
 
 URL_PLAYLISTS = 'https://www.googleapis.com/youtube/v3/playlists'
 URL_PLAYLIST_ITEMS = 'https://www.googleapis.com/youtube/v3/playlistItems'

@@ -2,7 +2,10 @@ import sqlite3
 from functools import wraps
 from typing import List, Optional
 
+from ..logger import get_logger
 from . import db_queries
+
+logger = get_logger("db")
 
 
 def query_append(prefix: str, suffix: str, *args):
@@ -13,7 +16,8 @@ def query_append(prefix: str, suffix: str, *args):
     :param suffix: What the query will end with, for example a LIMIT or OFFSET.
     :param args: A tuple containing the query block and the value that fits in that query,
                  if the value is None it's ignored.
-    :return: A tuple with the custom query and a list of values, where the None values have been removed.
+    :PRE: _
+    :POST: Returns a tuple with the custom query and a list of values, where the None values have been removed.
     """
     parameters = []
     appends = []
@@ -36,32 +40,46 @@ def fuzy(string: Optional[str]):
     """This function transforms a normal string into an SQL fuzy search string.
 
     :param string: the input string.
-    :return: The fuzy string the input string is empty/None.
+    :PRE: _
+    :POST: Returns the fuzy string the input string is empty/None.
     """
     return f'%{string.lower()}%' if string else None
 
 
-def db_error(f_name: str, e: Exception):
-    print(f"DB_ERROR: There was an error when trying to {f_name.replace('_', ' ')}.")
-    print(f" {e}")
+def db_error(f_name: str, e: Exception, msg: str = ""):
+    """
+
+    :param f_name: The action that caused the error.
+    :param e: The error message.
+    :param msg: Addional message. Optional.
+    :PRE: f_name must be a fuction name with "_" between the words
+    :POST: The error is logged.
+    """
+    logger.error(f"""There was an error when trying to {f_name.replace('_', ' ')}.
+    {e}
+    {msg}""")
 
 
 def db_query(f):
+    """Decorator that handles database errors properly.
+
+    :author: Carlos
+    :param f: Funtion to be decorated.
+    :PRE: f must execute a sql query
+    :POST: If there's a sqlite error it will be logged and an empty value will be returned.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         try:
             return f(*args, **kwargs)
         except sqlite3.IntegrityError as e:
-            db_error(f.__name__, e)
-            print(" Are you trying to reference an id that doesn't exist?")
+            db_error(f.__name__, e, "Are you trying to reference an id that doesn't exist?")
             return None
         except sqlite3.NotSupportedError as e:
-            db_error(f.__name__, e)
-            print(" One feature isn't supported by your local database.")
+            db_error(f.__name__, e, "One feature isn't supported by your local database.")
             return None
         except sqlite3.ProgrammingError as e:
-            db_error(f.__name__, e)
-            print(" The query was invalid.")
+            db_error(f.__name__, e, "The query was invalid.")
             return None
         except sqlite3.DatabaseError as e:
             db_error(f.__name__, e)
@@ -82,6 +100,8 @@ class DBMuziek:
         """Starts the connection to the database file, and verifies the tables needed are there.
 
         :author: Mathieu
+        :PRE: _
+        :POST: The database object will have a connection to the database file and the tables will be set up.
         """
         self.connect()
         if not self.validate_tables():
@@ -92,14 +112,20 @@ class DBMuziek:
         """Closes the connection to the database file.
 
         :author: Mathieu
+        :PRE: The connection to the database needs to exist.
+        :POST: The connection is broken.
         """
         self.disconnect()
 
     def connect(self):
         """Starts the connection to the database file with the path stored.
 
-         :author: Carlos
+        :author: Carlos
+        :PRE: _
+        :POST: Creates a new connection to the database file.
         """
+        if self._connection:
+            self.disconnect()
         self._connection = sqlite3.connect(self._path)
         self._connection.row_factory = sqlite3.Row
 
@@ -107,6 +133,8 @@ class DBMuziek:
         """Closes the connection to the database file.
 
         :author: Mathieu
+        :PRE: The connection to the database needs to exist.
+        :POST: Closes the connection to the database file.
         """
         self._connection.close()
         self._connection = None
@@ -120,7 +148,8 @@ class DBMuziek:
 
         :param query: The query to execute.
         :param parameters: The parameters to replace within the query.
-        :return: A database cursor.
+        :PRE: The connection to the database needs to exist.
+        :POST: Executes the sql query and returns a database cursor.
         """
         return self._connection.execute(query, parameters)
 
@@ -128,6 +157,8 @@ class DBMuziek:
         """Commits a database transaction.
 
         :author: Mathieu
+        :PRE: The connection to the database needs to exist.
+        :POST: The changes made are commited.
         """
         self._connection.commit()
 
@@ -136,7 +167,8 @@ class DBMuziek:
         """Checks if the expected tables exist in the database and creates them if they don't.
 
         :author: Carlos
-        :return: False if any table needed to be created, True otherwise.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns False if any table had to be created, True otherwise.
         """
         tables = (
             "groups",
@@ -166,7 +198,8 @@ class DBMuziek:
         """Checks if a table exist in the database.
 
         :param name: name of the table to check.
-        :return: 1 if it exists, 0 if it doesn't.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns 1 if it exists, 0 if it doesn't.
         """
         result = self.execute(db_queries.table_exists, (name,))
         return result.fetchone()[0]
@@ -175,7 +208,8 @@ class DBMuziek:
     def foreign_keys(self) -> int:
         """Checks if foreign_keys are enabled in sqlite.
 
-        :return: 1 if enabled, 0 if disabled.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns 1 if enabled, 0 if disabled.
         """
         result = self.execute(db_queries.foreign_keys)
         return result.fetchone()[0]
@@ -185,7 +219,8 @@ class DBMuziek:
         """Returns the amount of songs, after being filtered.
 
         :param filters: Filters the songs need to fit to be counted.
-        :return: The amount of songs.
+        :PRE: The connection to the database needs to exist.
+        :POST: The amount of songs.
         """
         default = {
             "genre": None,
@@ -208,7 +243,8 @@ class DBMuziek:
         """Obtains a playlist from the database based on its name.
 
         :param name: The name of the playlist.
-        :return: A Row if the playlist exists, None if it doesn't
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a Row if the playlist exists, None if it doesn't.
         """
         return self.execute(db_queries.get_playlist, (name,)).fetchone()
 
@@ -216,7 +252,8 @@ class DBMuziek:
     def get_playlists(self):
         """Obtains a list with all the playlists created.
 
-        :return: A list with Rows
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list with Rows
         """
         return self.execute(db_queries.get_playlists).fetchall()
 
@@ -226,7 +263,9 @@ class DBMuziek:
 
         :param song_name: The name of the song.
         :param group_id: The id of the group.
-        :return: A list of Rows if the song(s) exists, None if it doesn't, only one Row if the group is provided.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of Rows if the song(s) exist, None if it doesn't,
+               returns only one Row if the group is provided.
         """
         if not group_id:
             songs = list(map(dict, self.execute(db_queries.get_song, (song_name,)).fetchall()))
@@ -246,7 +285,8 @@ class DBMuziek:
         """Obtains the groups featured in a song.
 
         :param song_id: The id of the song.
-        :return: Returns a list of Rows with the groups featured in the song.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of Rows with the groups featured in the song.
         """
         return self.execute(db_queries.get_song_featuring, (song_id,)).fetchall()
 
@@ -257,7 +297,8 @@ class DBMuziek:
         :param filters: The filters the songs need to fit.
         :param offset: The offset in the database query.
         :param limit: The lmimit in the database query.
-        :return: An array of Rows
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns an array of Rows of the songs.
         """
         default = {
             "genre": None,
@@ -287,8 +328,9 @@ class DBMuziek:
 
         :param name: The name of the group.
         :param verbose: If more info should be provided.
-        :return: A Row if the group exists, None if it doesn't.
-                 If verbose the counts of songs and albums will also be provided.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns Row if the group exists, None if it doesn't.
+               If verbose the counts of songs and albums will also be provided.
         """
         group_query = self.execute(db_queries.get_group, (name,)).fetchone()
         if not verbose:
@@ -304,8 +346,9 @@ class DBMuziek:
 
         :param name: The name of the album.
         :param group_id: The id of the group, optional
-        :return: A Row if the album exists and the group is provided, None if it doesn't.
-                 If no group is provided a list of Rows.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a Row if the album exists and the group is provided, None if it doesn't.
+               If no group is provided a list of Rows.
         """
         if group_id:
             return self.execute(db_queries.get_album_with_group, (name, group_id)).fetchone()
@@ -317,7 +360,8 @@ class DBMuziek:
         """Obtains a list with all the songs an album contains.
 
         :param album_id: The id of the album.
-        :return: A list of Rows with songs.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of Rows with songs, if the album doesn't exist the list will be empty.
         """
         songs = list(map(dict, self.execute(db_queries.get_songs_album, (album_id,)).fetchall()))
 
@@ -332,16 +376,19 @@ class DBMuziek:
 
         :param playlist_id: The id of the playlist.
         :param song_id: The id of the song.
-        :return: A database cursor.
+        :PRE: The connection to the database needs to exist, the song and playlist need to exist in the database.
+        :POST: The song will be linked to playlist.
         """
-        return self.execute(db_queries.add_song_playlist, (playlist_id, song_id))
+        self.execute(db_queries.add_song_playlist, (playlist_id, song_id))
 
     @db_query
     def get_playlist_songs(self, playlist_id: int):
         """Returns the songs contained in a playlist.
 
         :param playlist_id: The id of the playlist.
-        :return: A list of Rows with the songs in the playlist.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of Rows of the songs in the playlist,
+               each song has a "featuring" field with Rows of the featured groups.
         """
         songs = list(map(dict, self.execute(db_queries.get_playlist_songs, (playlist_id,)).fetchall()))
 
@@ -356,7 +403,8 @@ class DBMuziek:
 
         :param name: Name for the playlist.
         :param author: The user that created the playlist.
-        :return: The id of the created playlist
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns the id of the created playlist
         """
         return self.execute(db_queries.create_playlist, (name, author)).lastrowid
 
@@ -366,7 +414,8 @@ class DBMuziek:
 
         :param name: Name of the group.
         :param members: List of members of the group.
-        :return: The if of the created group.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns the id of the created group.
         """
         return self.execute(db_queries.create_group, (name, ','.join(members))).lastrowid
 
@@ -376,6 +425,8 @@ class DBMuziek:
 
         :param group_id: The id of group to update.
         :param members: The members of the group.
+        :PRE: The connection to the database needs to exist, the group needs to exist in the database.
+        :POST: The group is updated with the provided info.
         """
         self.execute(db_queries.update_group, (','.join(members), group_id))
 
@@ -390,7 +441,9 @@ class DBMuziek:
         :param duration: Duration of the song. Optional.
         :param group_id: Id of the author of the song.
         :param featuring: List of id's for the groups featured in this song.
-        :return: Id of the song created.
+        :PRE: The connection to the database needs to exist,
+              the main and featuring groups needs to exist in the database.
+        :POST: Returns the id of the created song.
         """
         song_id = self.execute(db_queries.create_song, (name, link, genre, group_id, duration)).lastrowid
 
@@ -409,6 +462,9 @@ class DBMuziek:
         :param genre: Genre of the song.
         :param duration: Duration of the song.
         :param featuring: List of id's for the groups featuring this song. Optional.
+        :PRE: The connection to the database needs to exist,
+              the song and featuring groups needs to exist in the database.
+        :POST: The song is updated with the data provided.
         """
         self.execute(db_queries.update_song, (link, genre, duration, song_id))
 
@@ -424,7 +480,8 @@ class DBMuziek:
         :param name: Name of the album.
         :param songs: List of id's for the songs included in the album.
         :param group_id: Id of the author of the album.
-        :return: The id of the album created.
+        :PRE: The connection to the database needs to exist, the group and songs needs exist in the database.
+        :POST: Returns the id of the album created.
         """
         album_id = self.execute(db_queries.create_album, (name, group_id)).lastrowid
         for song_id in songs:
@@ -437,6 +494,8 @@ class DBMuziek:
 
         :param album_id: Id of the album to update.
         :param songs: List of id's for the songs included in the album.
+        :PRE: The connection to the database needs to exist, the album and songs need to exist in the database.
+        :POST: The album is updated with the data provided.
         """
         self.execute(db_queries.delete_album_songs, (album_id,))
         for song_id in songs:
@@ -448,7 +507,8 @@ class DBMuziek:
 
         :param key: The key to find the value.
         :param default: The default value.
-        :return: The value if it's found, the default one otherwise.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns the value if it's found, the default one otherwise.
         """
         row = self.execute(db_queries.get_setting, (key,)).fetchone()
         if row is None:
@@ -462,6 +522,8 @@ class DBMuziek:
 
         :param key: The key to stored the value under.
         :param value: The value to store.
+        :PRE: The connection to the database needs to exist.
+        :POST: The setting is set or overriden.
         """
         self.execute(db_queries.set_setting, (key, str(value)))
 
@@ -469,7 +531,8 @@ class DBMuziek:
     def get_albums(self):
         """Obtains a list with all the albums created.
 
-        :return: List of Rows with the album's info.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of Rows of the albums.
         """
         return self.execute(db_queries.get_albums).fetchall()
 
@@ -477,7 +540,8 @@ class DBMuziek:
     def get_groups(self):
         """Obtains a list with all the groups created.
 
-        :return: List of Rows with the group's info.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of Rows of the groups.
         """
         return self.execute(db_queries.get_groups).fetchall()
 
@@ -485,7 +549,8 @@ class DBMuziek:
     def get_genres(self):
         """Obtains a list with all the albums created.
 
-        :return: List of strings with the genres in the database.
+        :PRE: The connection to the database needs to exist.
+        :POST: Returns a list of genres stored in the database, formatted to have the first letter in caps.
         """
         genres = self.execute(db_queries.get_genres).fetchall()
 
