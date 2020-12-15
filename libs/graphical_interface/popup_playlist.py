@@ -18,7 +18,9 @@ class PopupPlaylist(Popup):
     def submit_form(self):
         name = self.ids.name_input.text
 
-        if self._db.get_playlist(name):
+        if not name:
+            ErrorPopup("No name was provided.")
+        elif self._db.get_playlist(name):
             ErrorPopup("That playlist already exists.")
         else:
             with self._db.connection:

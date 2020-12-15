@@ -15,23 +15,18 @@ class PopupAlbum(Popup):
         super(PopupAlbum, self).__init__(**kwargs)
         self._db = db
         self.group_data = None
+        self._update_id = None
 
-        params = {"group_id": update_data["group_id"],
-                  "group_name": update_data["group_name"]} if update_data else None
-        self.ids["group_input"] = GroupDropdown(self._db, params)
+        self.ids["group_input"] = GroupDropdown(self._db)
         self.ids.group_container.add_widget(self.ids["group_input"])
 
         self.ids["group_input"].dropdown.bind(on_select=lambda _, btn: self.group_select(btn))
 
         self.add_song_field()
+        self.title = "Create an album"
 
-        self._update_id = update_data["album_id"] if update_data else None
         if update_data:
-            songs = self._db.get_album_songs(self._update_id)
-            self.update_data({**update_data, "songs": songs})
-            self.title = "Modify an album"
-        else:
-            self.title = "Create an album"
+            self.update_data(update_data)
 
     def add_song_field(self):
         song_list = self.ids.song_list
@@ -63,6 +58,7 @@ class PopupAlbum(Popup):
 
             song_list = self.ids.song_list
             songs = self._db.get_album_songs(self._update_id)
+            self.title = "Modify an album"
 
             for i, song in enumerate(songs, 1):
                 if i > song_list.counter:

@@ -16,9 +16,7 @@ class PopupSong(Popup):
         super(PopupSong, self).__init__(**kwargs)
         self._db = db
 
-        params = {"group_id": update_data["group_id"],
-                  "group_name": update_data["group_name"]} if update_data else None
-        self.ids["group_input"] = GroupDropdown(self._db, params)
+        self.ids["group_input"] = GroupDropdown(self._db)
         self.ids.group_container.add_widget(self.ids["group_input"])
 
         self.add_featuring_field()
@@ -26,9 +24,6 @@ class PopupSong(Popup):
         self._update_id = None
         if update_data:
             self.update_data(update_data)
-            self.title = "Modify a song"
-        else:
-            self.title = "Create a song"
 
     def submit_form(self):
         dl = SongDownloader()
@@ -109,6 +104,7 @@ class PopupSong(Popup):
 
     def update_data(self, data):
         if "song_id" in data:
+            self.title = "Modify a song"
             self._update_id = data["song_id"]
         if "song_name" in data:
             self.ids.name_input.text = data["song_name"]
