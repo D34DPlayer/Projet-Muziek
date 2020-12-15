@@ -21,3 +21,20 @@
             Button:
                 text: "Submit"
                 on_release: root.submit_form()
+
+<PopupAddToPlaylist>:
+    title: "Add the song to a playlist:"
+    BoxLayout:
+        orientation: 'vertical'
+        FormElement:
+            id: playlist_container
+            Label:
+                text: 'Playlist name:'
+        FormElement:
+            spacing: 10
+            Button:
+                text: "Cancel"
+                on_release: root.dismiss()
+            Button:
+                text: "Submit"
+                on_release: root.submit_form()
