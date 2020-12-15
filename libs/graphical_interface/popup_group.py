@@ -67,6 +67,7 @@ class PopupGroup(Popup):
         self.ids.members_list_container.size_hint = (1, members_list.counter + 1)
 
     def update_data(self, data):
+        data = dict(data)
         if "group_id" in data:
             self._update_id = data["group_id"]
         if "group_name" in data:

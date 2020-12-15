@@ -49,6 +49,7 @@ class PopupAlbum(Popup):
             self.ids[f"song{i}"].update_songs(g_id, g_name)
 
     def update_data(self, data):
+        data = dict(data)
         if "group_id" in data:
             self.ids.group_input.update_data(data)
             self.group_select(self.ids.group_input)

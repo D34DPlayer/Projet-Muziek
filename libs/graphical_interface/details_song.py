@@ -103,6 +103,8 @@ class DetailsSong(BoxLayout):
         path = dl.get_song_path(self.song_id)
 
         if path:
+            path = os.path.abspath(path)
+
             if os.getenv('WINDIR'):
                 explorer = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
                 subprocess.run([explorer, '/select,', path])

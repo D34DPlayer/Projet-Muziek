@@ -103,6 +103,7 @@ class PopupSong(Popup):
         return buffer
 
     def update_data(self, data):
+        data = dict(data)
         if "song_id" in data:
             self.title = "Modify a song"
             self._update_id = data["song_id"]
