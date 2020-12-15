@@ -246,14 +246,18 @@ class DBMuziek:
         return self.execute(query, params).fetchone()[0]
 
     @db_query
-    def get_playlist(self, name: str):
-        """Obtains a playlist from the database based on its name.
+    def get_playlist(self, name: str = "", playlist_id: int = -1):
+        """Obtains a playlist from the database based on its name/id.
 
         :param name: The name of the playlist.
+        :param playlist_id: The id of the playlist.
         :PRE: The connection to the database needs to exist.
         :POST: Returns a Row if the playlist exists, None if it doesn't.
         """
-        return self.execute(db_queries.get_playlist, (name,)).fetchone()
+        if playlist_id < 0:
+            return self.execute(db_queries.get_playlist, (name,)).fetchone()
+        else:
+            return self.execute(db_queries.get_playlist_with_id, (playlist_id,)).fetchone()
 
     @db_query
     def get_playlists(self):
@@ -265,23 +269,27 @@ class DBMuziek:
         return self.execute(db_queries.get_playlists).fetchall()
 
     @db_query
-    def get_song(self, song_name: str, group_id: Optional[str] = None):
+    def get_song(self, song_name: str = "", group_id: Optional[str] = None, song_id: int = -1):
         """Obtains a song from the database based on its name, and optionally its group name.
 
         :param song_name: The name of the song.
         :param group_id: The id of the group.
+        :param song_id: The id of the song to fetch.
         :PRE: The connection to the database needs to exist.
         :POST: Returns a list of Rows if the song(s) exist, None if it doesn't,
                returns only one Row if the group is provided.
         """
-        if not group_id:
+        if not group_id and song_id < 0:
             songs = list(map(dict, self.execute(db_queries.get_song, (song_name,)).fetchall()))
 
             for song in songs:
                 song["featuring"] = self.get_song_featuring(song["song_id"])
             return songs
         else:
-            song = self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
+            if song_id < 0:
+                song = self.execute(db_queries.get_song_with_group, (song_name, group_id)).fetchone()
+            else:
+                song = self.execute(db_queries.get_song_with_id, (song_id,)).fetchone()
             if song:
                 song = dict(song)
                 song["featuring"] = self.get_song_featuring(song["song_id"])
@@ -331,17 +339,21 @@ class DBMuziek:
         return songs
 
     @db_query
-    def get_group(self, name: str, verbose: bool = False):
+    def get_group(self, name: str, verbose: bool = False, group_id: int = -1):
         """Obtains a group from the database based on its name,
         will return even more info about it if requested.
 
         :param name: The name of the group.
         :param verbose: If more info should be provided.
+        :param group_id: The group id instead of the name. Optional.
         :PRE: The connection to the database needs to exist.
         :POST: Returns Row if the group exists, None if it doesn't.
                If verbose the counts of songs and albums will also be provided.
         """
-        group_query = self.execute(db_queries.get_group, (name,)).fetchone()
+        if group_id >= 0:
+            group_query = self.execute(db_queries.get_group_with_id, (group_id,)).fetchone()
+        else:
+            group_query = self.execute(db_queries.get_group, (name,)).fetchone()
         if not verbose:
             return group_query
         elif group_query:
@@ -350,15 +362,18 @@ class DBMuziek:
             return group_query, songs, albums
 
     @db_query
-    def get_album(self, name: str, group_id: Optional[int] = None):
+    def get_album(self, name: str = "", group_id: Optional[int] = None, album_id: int = -1):
         """Obtains an album from the database based on its name.
 
         :param name: The name of the album.
         :param group_id: The id of the group, optional
+        :param album_id: If an id needs to be
         :PRE: The connection to the database needs to exist.
         :POST: Returns a Row if the album exists and the group is provided, None if it doesn't.
                If no group is provided a list of Rows.
         """
+        if album_id >= 0:
+            return self.execute(db_queries.get_album_with_id, (album_id,)).fetchone()
         if group_id:
             return self.execute(db_queries.get_album_with_group, (name, group_id)).fetchone()
         else:

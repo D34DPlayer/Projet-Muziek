@@ -89,6 +89,8 @@ SELECT count(song_id)
 
 get_playlist = "SELECT playlist_id, author, name as playlist_name FROM playlists WHERE lower(name) = lower(?);"
 
+get_playlist_with_id = "SELECT playlist_id, author, name as playlist_name FROM playlists WHERE playlist_id = ?;"
+
 get_playlists = "SELECT playlist_id, author, name as playlist_name FROM playlists;"
 
 get_song = '''
@@ -96,6 +98,13 @@ SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre
     FROM songs as s
         LEFT JOIN groups g on s.group_id = g.group_id
     WHERE lower(s.name) = lower(?);
+'''
+
+get_song_with_id = '''
+SELECT song_id, s.name as song_name, duration, g.name as group_name, link, genre, g.group_id as group_id
+    FROM songs as s
+        LEFT JOIN groups g on s.group_id = g.group_id
+    WHERE song_id = ?;
 '''
 
 get_song_with_group = '''
@@ -125,6 +134,12 @@ get_group = '''
 SELECT group_id, members, name as group_name
     FROM groups
     WHERE lower(name) = lower(?);
+'''
+
+get_group_with_id = '''
+SELECT group_id, members, name as group_name
+    FROM groups
+    WHERE group_id = ?;
 '''
 
 add_song_playlist = "INSERT OR IGNORE INTO playlistSongs VALUES (?, ?);"
@@ -159,6 +174,13 @@ SELECT album_id, a.group_id as group_id, g.name as group_name, a.name as album_n
     FROM albums as a
         LEFT JOIN groups as g on a.group_id = g.group_id
     WHERE lower(a.name) = lower(?) and g.group_id = ?;
+'''
+
+get_album_with_id = '''
+SELECT album_id, a.group_id as group_id, g.name as group_name, a.name as album_name
+    FROM albums as a
+        LEFT JOIN groups as g on a.group_id = g.group_id
+    WHERE album_id = ?;
 '''
 
 create_album = "INSERT INTO albums(name, group_id) VALUES (?, ?);"
