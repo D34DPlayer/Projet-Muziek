@@ -339,7 +339,7 @@ class DBMuziek:
         return songs
 
     @db_query
-    def get_group(self, name: str, verbose: bool = False, group_id: int = -1):
+    def get_group(self, name: str = '', verbose: bool = False, group_id: int = -1):
         """Obtains a group from the database based on its name,
         will return even more info about it if requested.
 
