@@ -43,7 +43,7 @@ def add_song(db: DBMuziek, name: Optional[str] = None, group_id: Optional[int] =
             return song["song_id"]
 
     link = ""
-    downloader = SongDownloader(logger)
+    downloader = SongDownloader()
     while not link:
         link = utils.question("Youtube link", song["link"] if song else None)
         if not (downloader.fetch_song(link)):
@@ -374,7 +374,7 @@ def download_song(db: DBMuziek, name: str, group_id: Optional[int] = None):
     :PRE: The database object needs to be connected.
     :POST: The song requested is downloaded.
     """
-    downloader = SongDownloader(logger)
+    downloader = SongDownloader()
 
     if not (song_query := utils.choose_song(db.get_song(name, group_id))):
         reply = utils.question_choice(f'The song "{name}" doesn\'t. exist yet. Do you want to create it?',

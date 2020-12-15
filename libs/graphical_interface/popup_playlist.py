@@ -118,3 +118,4 @@ class PlaylistButton(Button):
 def summon_popup_playlist(db: DBMuziek, dd: DropDown):
     dd.dismiss()
     PopupPlaylist(db).open()
+
