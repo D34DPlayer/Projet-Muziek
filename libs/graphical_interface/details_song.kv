@@ -1,0 +1,58 @@
+<Element@BoxLayout>:
+    orientation: 'horizontal'
+    padding: [20, 10, 20, 10]
+
+<DetailsSong>:
+    orientation: 'vertical'
+    Element:
+        Label:
+            text: "Song name:"
+        Label:
+            id: song_name
+            text: "???"
+    Element:
+        Label:
+            text: "Group name:"
+        Label:
+            id: group_name
+            text: "???"
+    Element:
+        Label:
+            text: "Duration:"
+        Label:
+            id: duration
+            text: "??:??"
+    Element:
+        Label:
+            text: "Link:"
+        Label:
+            id: link
+            text: "???"
+    Element:
+        Label:
+            text: "Genre:"
+        Label:
+            id: genre
+            text: "???"
+    Element:
+        spacing: 10
+        Button:
+            id: edit_button
+            disabled: True
+            text: "Edit song"
+            on_release: root.edit_song()
+        Button:
+            id: dl_button
+            disabled: True
+            text: "Download song"
+            on_release: root.download_song()
+        Button:
+            id: dl_location_button
+            disabled: True
+            text: "Check the downloaded song"
+            on_release: root.open_dl_folder()
+        Button:
+            id: pl_button
+            disabled: True
+            text: "Add to playlist"
+            on_release: root.add_to_playlist()
