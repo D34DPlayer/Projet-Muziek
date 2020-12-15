@@ -4,6 +4,7 @@ import subprocess
 from kivy.lang.builder import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 
 from .popup_song import PopupSong
 from .popup_playlist import PopupAddToPlaylist
@@ -21,6 +22,7 @@ class DetailsSong(BoxLayout):
         self.song_id = song_id
 
         self.song = None
+        self._feat_pos = 1
 
         self.update_data(self.song_id)
 
@@ -28,17 +30,30 @@ class DetailsSong(BoxLayout):
             btn = Button(text="Go back")
             btn.bind(on_release=lambda _: back_action())
             self.add_widget(btn)
+            self._feat_pos += 1
 
     def update_data(self, song_id):
-        self.song_id = song_id
-        self.song = self._db.get_song(song_id=song_id)
+        song = self._db.get_song(song_id=song_id)
 
-        if self.song:
-            self.ids.song_name.text = self.song["song_name"]
-            self.ids.duration.text = format_duration(self.song["duration"])
-            self.ids.link.text = self.song["link"]
-            self.ids.genre.text = self.song["genre"]
-            self.ids.group_name.text = self.song["group_name"]
+        if song:
+            self.song = song
+            self.song_id = song_id
+            self.ids.song_name.text = song["song_name"]
+            self.ids.duration.text = format_duration(song["duration"])
+            self.ids.link.text = song["link"]
+            self.ids.genre.text = song["genre"]
+            self.ids.group_name.text = song["group_name"]
+
+            if 'featuring' in self.ids:
+                self.remove_widget(self.ids['featuring'])
+
+            if song["featuring"]:
+                el = BoxLayout(orientation="horizontal", padding=[20, 10, 20, 10])
+                el.add_widget(Label(text="Featuring:"))
+                el.add_widget(Label(text=", ".join([f["group_name"] for f in song["featuring"]])))
+
+                self.ids["featuring"] = el
+                self.add_widget(el, self._feat_pos)
 
             self.ids.dl_button.disabled = False
             self.ids.pl_button.disabled = False
@@ -63,6 +78,7 @@ class DetailsSong(BoxLayout):
             dl = SongDownloader()
             if dl.is_downloaded(self.song_id):
                 self.ids.dl_button.text = "Redownload"
+                self.ids.dl_button.disabled = False
                 self.ids.dl_location_button.disabled = False
         else:
             if data["status"] == "downloading":
@@ -76,9 +92,10 @@ class DetailsSong(BoxLayout):
                 self.check_download()
 
     def edit_song(self):
-        edit = PopupSong(self._db, self.song)
-        edit.bind(on_dismiss=lambda _: self.update_data(self.song_id))
-        edit.open()
+        if self.song:
+            edit = PopupSong(self._db, self.song)
+            edit.bind(on_dismiss=lambda _: self.update_data(self.song_id))
+            edit.open()
 
     def open_dl_folder(self):
         dl = SongDownloader()

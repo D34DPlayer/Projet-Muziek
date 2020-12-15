@@ -1,0 +1,47 @@
+<Element@BoxLayout>:
+    orientation: 'horizontal'
+    padding: [20, 10, 20, 10]
+
+<DetailsGroup>:
+    orientation: 'vertical'
+    Element:
+        Label:
+            text: "Group name:"
+        Label:
+            id: group_name
+            text: "???"
+    Element:
+        Label:
+            text: "Members:"
+        Label:
+            id: members
+            text: "???"
+    Element:
+        Label:
+            text: "Songs:"
+        Label:
+            id: songs
+            text: "???"
+    Element:
+        Label:
+            text: "Albums:"
+        Label:
+            id: albums
+            text: "???"
+    Element:
+        spacing: 10
+        Button:
+            id: edit_button
+            disabled: True
+            text: "Edit group"
+            on_release: root.edit_group()
+        Button:
+            id: add_song_button
+            disabled: True
+            text: "Add a song"
+            on_release: root.add_song()
+        Button:
+            id: add_album_button
+            disabled: True
+            text: "Add an album"
+            on_release: root.add_album()
