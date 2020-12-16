@@ -80,10 +80,11 @@ class PopupSong(Popup):
 
         buffer["genre"] = genre_input.text
 
+        video_info = downloader.fetch_song(link_input.text)
         if not link_input.text:
             ErrorPopup("No link provided.")
             return None
-        elif not (video_info := downloader.fetch_song(link_input.text)):
+        elif not video_info:
             ErrorPopup("The link provided isn't valid.")
             return None
 
