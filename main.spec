@@ -17,7 +17,7 @@ layout_path = "libs/graphical_interface/layouts"
 a = Analysis(
     ["main.py"],
     pathex=[],
-    datas=[(f"{layout_path}/*.kv", layout_path)],
+    datas=[(f"{layout_path}/*.kv", layout_path), ("images/muziek.ico", "images")],
     hookspath=hookspath(),
     runtime_hooks=runtime_hooks(),
     win_no_prefer_redirects=False,
@@ -42,5 +42,6 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True
+    console=True,
+    icon="images/muziek.ico"
 )
