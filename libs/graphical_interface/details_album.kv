@@ -1,0 +1,41 @@
+<Element@BoxLayout>:
+    canvas:
+        Color:
+            rgb: 0x13 / 255.0, 0x16 / 255.0, 0x19 / 255.0
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    orientation: 'horizontal'
+    padding: (5, 5, 5, 5)
+
+<DetailsAlbum>:
+    orientation: 'vertical'
+    spacing: 10
+    padding: (10, 10, 10, 10)
+    Element:
+        Label:
+            text: "Album name:"
+        Label:
+            id: album_name
+            text: "???"
+    Element:
+        Label:
+            text: "Group name:"
+        Label:
+            id: group_name
+            text: "???"
+    Element:
+        size_hint: (1, 1)
+        id: song_list_container
+        Label:
+            text: "Songs:"
+        BoxLayout:
+            orientation: "vertical"
+            id: song_list
+    Element:
+        spacing: 10
+        Button:
+            id: edit_button
+            disabled: True
+            text: "Edit album"
+            on_release: root.edit_album()
