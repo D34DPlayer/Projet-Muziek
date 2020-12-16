@@ -1,4 +1,4 @@
---pre --extra-index-url https://kivy.org/downloads/simple/
+--extra-index-url https://kivy.org/downloads/simple/
 docopt
 youtube_dl
 requests
