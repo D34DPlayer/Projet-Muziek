@@ -1,0 +1,35 @@
+<Element@BoxLayout>:
+    canvas:
+        Color:
+            rgb: 0x13 / 255.0, 0x16 / 255.0, 0x19 / 255.0
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    orientation: 'horizontal'
+    padding: (5, 5, 5, 5)
+
+<DetailsPlaylist>:
+    orientation: 'vertical'
+    spacing: 10
+    padding: (10, 10, 10, 10)
+    Element:
+        Label:
+            text: "Playlist name:"
+        Label:
+            id: playlist_name
+            text: "???"
+    Element:
+        size_hint: (1, 1)
+        id: song_list_container
+        Label:
+            text: "Songs:"
+        BoxLayout:
+            orientation: "vertical"
+            id: song_list
+    Element:
+        spacing: 10
+        Button:
+            id: dl_button
+            disabled: True
+            text: "Download playlist"
+            on_release: root.download_playlist()
