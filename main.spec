@@ -17,7 +17,7 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=[],
-    datas=[(f"{layout_path}/*.kv", layout_path)],
+    datas=[(f"{layout_path}/*.kv", layout_path), ("images/muziek.ico", "images")],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
@@ -43,5 +43,6 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True
+    console=True,
+    icon="images/muziek.ico"
 )

@@ -169,5 +169,6 @@ class MainWindow(App):
         self.root.display(*args)
 
     def build(self):
+        self.icon = "images/muziek.png"
         self.root = Root(self._db)
         return self.root
