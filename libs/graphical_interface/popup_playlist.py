@@ -51,7 +51,7 @@ class PopupAddToPlaylist(Popup):
 
 
 class PlaylistDropdown(Button):
-    def __init__(self, db: DBMuziek,**kwargs):
+    def __init__(self, db: DBMuziek, **kwargs):
         super(PlaylistDropdown, self).__init__(**kwargs)
         self._db = db
 
@@ -118,4 +118,3 @@ class PlaylistButton(Button):
 def summon_popup_playlist(db: DBMuziek, dd: DropDown):
     dd.dismiss()
     PopupPlaylist(db).open()
-

@@ -5,7 +5,6 @@ from kivy.lang.builder import Builder
 
 from ..downloader import SongDownloader
 from ..database import DBMuziek
-from .utils import ErrorPopup
 
 Builder.load_file("libs/graphical_interface/details_playlist.kv")
 

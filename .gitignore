@@ -1,7 +1,7 @@
 # data
 /songs
-/muziek.db
-/muziek.log
+/*.db
+/*.log
 
 # Libs
 __pycache__/

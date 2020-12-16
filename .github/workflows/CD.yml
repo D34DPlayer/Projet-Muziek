@@ -1,0 +1,37 @@
+name: CI
+
+on: [workflow_dispatch]
+
+jobs:
+  windows:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Package Application
+        uses: JackMcKew/pyinstaller-action-windows@main
+        with:
+          path: .
+          spec: main.spec
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: windows_build
+          path: dist/windows
+  linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Package Application
+        uses: JackMcKew/pyinstaller-action-linux@main
+        with:
+          path: .
+          spec: main.spec
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: linux_build
+          path: dist/linux

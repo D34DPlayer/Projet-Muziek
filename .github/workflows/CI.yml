@@ -53,3 +53,12 @@ jobs:
           file: ./coverage.xml
           flags: pytest
           env_vars: PYTHON
+
+  trigger:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: CD
+          token: ${{ secrets.PERSONAL_TOKEN }}
