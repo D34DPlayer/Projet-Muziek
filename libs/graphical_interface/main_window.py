@@ -158,7 +158,7 @@ class Root(BoxLayout):
 
 class MainWindow(App):
     def __init__(self, db: DBMuziek, **kwargs):
-        for file in glob.glob(os.path.join(os.path.dirname(__file__), '*.kv')):
+        for file in glob.glob(os.path.join(os.path.dirname(__file__), 'layouts', '*.kv')):
             Builder.load_file(file)
 
         super().__init__(**kwargs)

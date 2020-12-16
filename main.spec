@@ -10,13 +10,14 @@ if platform.system() == "Windows":
     bins = [Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)]
 
 block_cipher = None
+layout_path = "libs/graphical_interface/layouts"
 
 
 a = Analysis(
     ["main.py"],
-    pathex=["."],
+    pathex=[],
     binaries=[],
-    datas=[("libs/graphical_interface/*.kv", "libs/graphical_interface")],
+    datas=[(f"{layout_path}/*.kv", layout_path)],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
