@@ -1,13 +1,10 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.lang.builder import Builder
 
 from ..database import DBMuziek
 from .popup_group import PopupGroup
 from .popup_album import PopupAlbum
 from .popup_song import PopupSong
-
-Builder.load_file("libs/graphical_interface/details_group.kv")
 
 
 class DetailsGroup(BoxLayout):

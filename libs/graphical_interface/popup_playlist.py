@@ -1,13 +1,10 @@
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
-from kivy.lang.builder import Builder
 
 from ..database import DBMuziek
 from .utils import ErrorPopup
 from ..console_interface import create_playlist
-
-Builder.load_file("libs/graphical_interface/popup_playlist.kv")
 
 
 class PopupPlaylist(Popup):

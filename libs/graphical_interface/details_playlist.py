@@ -1,12 +1,9 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.lang.builder import Builder
 
 from ..downloader import SongDownloader
 from ..database import DBMuziek
-
-Builder.load_file("libs/graphical_interface/details_playlist.kv")
 
 
 class DetailsPlaylist(BoxLayout):

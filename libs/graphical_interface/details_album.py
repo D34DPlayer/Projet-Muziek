@@ -1,12 +1,9 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.lang.builder import Builder
 
 from ..database import DBMuziek
 from .popup_album import PopupAlbum
-
-Builder.load_file("libs/graphical_interface/details_album.kv")
 
 
 class DetailsAlbum(BoxLayout):

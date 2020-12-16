@@ -1,7 +1,6 @@
 import os
 import subprocess
 
-from kivy.lang.builder import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
@@ -11,8 +10,6 @@ from .popup_playlist import PopupAddToPlaylist
 from .utils import ErrorPopup, InfoPopup
 from ..database import DBMuziek, format_duration
 from ..downloader import SongDownloader
-
-Builder.load_file("libs/graphical_interface/details_song.kv")
 
 
 class DetailsSong(BoxLayout):

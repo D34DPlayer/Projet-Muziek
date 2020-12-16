@@ -1,4 +1,3 @@
-from kivy.lang.builder import Builder
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
@@ -6,8 +5,6 @@ from kivy.uix.dropdown import DropDown
 from ..database import DBMuziek
 from .popup_song import GroupDropdown, PopupSong
 from .utils import ErrorPopup
-
-Builder.load_file("libs/graphical_interface/popup_album.kv")
 
 
 class PopupAlbum(Popup):
