@@ -35,7 +35,7 @@ exe = EXE(
     a.datas,
     *bins,
     [],
-    name="main",
+    name="muziek",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
