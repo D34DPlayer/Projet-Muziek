@@ -37,13 +37,23 @@ Options:
 ```
 
 ## Installation
-### Dependencies
-Muziek requires ffmpeg/libav to be able to download the songs: 
-- On linux, ffmpeg should be available in your package manager:
+### Requirements
+Muziek requires Python 3.7 or greater.
+It also requires ffmpeg/libav to be able to download the songs:
+- On linux, ffmpeg should be available in your package manager: `sudo apt install ffmpeg` or similar.
 - On Windows, you can install ffmpeg via [chocolatey](https://chocolatey.org/packages/ffmpeg), or download it manually from [here](https://ffmpeg.org/download.html#build-windows). 
+
 ### Getting an executable
 You can get an already built executable for Windows or Linux with the [releases](https://github.com/D34DPlayer/Projet-Muziek/releases).
+
 ### Running it directly
-You don't need to build an executable to run it, you can clone this repository, install the pytohn requirements and execute [main.py](https://github.com/D34DPlayer/Projet-Muziek/blob/master/main.py) with python as you would with the regular executable.
+You don't need to build an executable to run it, you can clone this repository, install the python requirements and execute [main.py](https://github.com/D34DPlayer/Projet-Muziek/blob/master/main.py) with python as you would with the regular executable.
+```Bash
+git clone https://github.com/D34DPlayer/Projet-Muziek
+cd Projet-Muziek
+python3 -m pip install -r requirements.txt
+python3 main.py -h
+```
+
 ### Creating your own executable
 If you want to build your own executable, follow the previous step and check that it works properly, then install pyinstaller with pip and finally run `pyinstaller main.spec` the executable will be located in the `dist` folder.
