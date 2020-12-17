@@ -13,6 +13,10 @@ from .details_album import DetailsAlbum
 from .details_group import DetailsGroup
 from .details_playlist import DetailsPlaylist
 from .details_song import DetailsSong
+from .popup_album import PopupAlbum
+from .popup_group import PopupGroup
+from .popup_playlist import PopupPlaylist
+from .popup_song import PopupSong
 
 
 class Row(ButtonBehavior, BoxLayout):
@@ -139,21 +143,22 @@ class Root(BoxLayout):
         super().__init__(**kwargs)
         self._db = db
 
-    def display(self, widget):
+    def display(self, widget, callback_create=None):
         self.ids.content.clear_widgets()
         self.ids.content.add_widget(widget)
+        self.ids.create.on_release = callback_create
 
     def display_groups(self, page: int = 0):
-        self.display(GroupsWidget(self._db, page=page))
+        self.display(GroupsWidget(self._db, page=page), lambda: PopupGroup(self._db).open())
 
     def display_songs(self, page: int = 0):
-        self.display(SongsWidget(self._db, page=page))
+        self.display(SongsWidget(self._db, page=page), lambda: PopupSong(self._db).open())
 
     def display_albums(self, page: int = 0):
-        self.display(AlbumsWidget(self._db, page=page))
+        self.display(AlbumsWidget(self._db, page=page), lambda: PopupAlbum(self._db).open())
 
     def display_playlists(self, page: int = 0):
-        self.display(PlaylistsWidget(self._db, page=page))
+        self.display(PlaylistsWidget(self._db, page=page), lambda: PopupPlaylist(self._db).open())
 
 
 class MainWindow(App):
