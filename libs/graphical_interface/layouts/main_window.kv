@@ -40,6 +40,15 @@
     BoxLayout:
         id: content
 
+    FloatLayout:
+        size_hint: (0, 0)
+        Button:
+            pos: (root.width - (self.width + 10), 10)
+            size_hint: (None, None)
+            width: 30
+            height: 30
+            text: '+'
+
 <PageLayout>:
     orientation: 'vertical'
     BoxLayout:
