@@ -1,19 +1,19 @@
 """Keep your music organized.
 
 Usage:
-  main.py [-d <PATH>]
-  main.py [-d <PATH>] add (song | group | album)
-  main.py [-d <PATH>] playlist <name> [-D | -e | -i | -s <song>...]
-  main.py [-d <PATH>] list songs [-g <genre>] [-n <name>] [-G group]
-  main.py [-d <PATH>] list group <name>
-  main.py [-d <PATH>] list album <name>
-  main.py [-d <PATH>] list (playlists | groups | albums)
-  main.py [-d <PATH>] download song <name>
-  main.py [-d <PATH>] youtube list [<name>]
-  main.py [-d <PATH>] youtube import <name>
-  main.py [-d <PATH>] youtube export <name>
-  main.py -h | --help
-  main.py --version
+  muziek [-d <PATH>]
+  muziek [-d <PATH>] add (song | group | album)
+  muziek [-d <PATH>] playlist <name> [-D | -e | -i | -s <song>...]
+  muziek [-d <PATH>] list songs [-g <genre>] [-n <name>] [-G group]
+  muziek [-d <PATH>] list group <name>
+  muziek [-d <PATH>] list album <name>
+  muziek [-d <PATH>] list (playlists | groups | albums)
+  muziek [-d <PATH>] download song <name>
+  muziek [-d <PATH>] youtube list [<name>]
+  muziek [-d <PATH>] youtube import <name>
+  muziek [-d <PATH>] youtube export <name>
+  muziek -h | --help
+  muziek --version
 
 Options:
   -h --help             Show this screen.
