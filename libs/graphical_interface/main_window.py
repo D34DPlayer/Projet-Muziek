@@ -32,7 +32,18 @@ class Row(ButtonBehavior, BoxLayout):
 
 
 class PageLayout(BoxLayout):
-    def __init__(self, header: List[str], sizes: List[int], total_items: int, page: int = 1, **kwargs):
+    """A widget with a pagination system."""
+    def __init__(self, header: List[str], sizes: List[float], total_items: int, page: int = 1, **kwargs):
+        """
+        :param header: The header to display on top of each page.
+        :param sizes: The size hint of each column. Both header and sizes must have the same length.
+        :param total_items: An hint to compute the total numbers of pages.
+        :param page: The current page to show.
+        :raises: AssertationError if the header and sizes lengths are not equals.
+        :PRE: either `self.content` must be defined or `get_page` must be overridden.
+            `self.content` must comply with the same rules shown in `get_page`.
+        :POST: Displays the current page.
+        """
         super(PageLayout, self).__init__(**kwargs)
         self.header = header
         self.cols_size = sizes
@@ -85,6 +96,12 @@ class PageLayout(BoxLayout):
         self.ids.page_index.text = f'{self.page}/{self.total_pages}'
 
     def get_page(self, page: int) -> List[List[str]]:
+        """Returns all items to display on a particular page.
+
+        :param page: The page that will be displayed.
+        :PRE: _
+        :POST: Each item in the list must be of the size of the header + 1, the first element being the item's id.
+        """
         if hasattr(self, 'content'):
             self.total_items = len(self.content)
             return self.content[page * self.per_page: (page + 1) * self.per_page]
