@@ -217,7 +217,7 @@ SELECT f.group_id as group_id, g.name as group_name, members
 """
 
 get_albums = """
-SELECT a.name as album_name, g.name as group_name
+SELECT a.name as album_name, g.name as group_name, album_id
     FROM albums as a
         LEFT JOIN groups as g on a.group_id = g.group_id;
 """
