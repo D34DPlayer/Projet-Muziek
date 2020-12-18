@@ -152,6 +152,8 @@ class YoutubeAPI:
         :param private: True to create a private playlist. Otherwise the playlist will be unlisted.
         :return: the freshly created playlist.
         :raise: RuntimeError if there is an error from the YoutubeAPI.
+        :PRE: _
+        :POST: Will refresh the token if needed
         """
         data = {
             'snippet': {
@@ -164,6 +166,7 @@ class YoutubeAPI:
             # fetch the playlists
             data = r.json()
             if not r.ok:
+                logger.error(f"An error occured while fetching playlists: {data}")
                 error = data.get('error', {})
                 errors = ', '.join(e.get('reason') for e in error.get('errors', []))
                 raise RuntimeError(f'{error.get("code", r.status_code)}: {error.get("message", "Unknown")} - {errors}')
@@ -180,6 +183,8 @@ class YoutubeAPI:
         :param song: The song to add to the playlist. Both an url to a video and its videoId are valid.
         :raise: ValueError if the song is not valid.
         :raise: RuntimeError if there is an error from the YoutubeAPI.
+        :PRE: the playlist must exist on the user's account.
+        :POST: Will refresh the token if needed
         """
         data = {
             'snippet': {
@@ -197,6 +202,7 @@ class YoutubeAPI:
         with requests.post(URL_PLAYLIST_ITEMS, json=data, params=params, headers=self._token.headers) as r:
             data = r.json()
             if not r.ok:
+                logger.error(f"An error occured while adding a song: {data}")
                 error = data.get('error', {})
                 errors = ', '.join(e.get('reason') for e in error.get('errors', []))
                 raise RuntimeError(f'{error.get("code", r.status_code)}: {error.get("message", "Unknown")} - {errors}')
