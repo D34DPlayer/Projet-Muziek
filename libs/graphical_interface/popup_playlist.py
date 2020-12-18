@@ -144,5 +144,6 @@ class PopupImportPlaylist(Popup):
         if not buffer:
             ErrorPopup("No code was provided.")
         else:
-            import_playlist(self._db, buffer, self._name)
+            with self._db.connection:
+                import_playlist(self._db, buffer, self._name)
             self.dismiss()
