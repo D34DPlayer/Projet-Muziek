@@ -1,9 +1,12 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.core.clipboard import Clipboard
 
+from ..console_interface.utils import export_playlist
 from ..downloader import SongDownloader
 from ..database import DBMuziek
+from.utils import InfoPopup
 
 
 class DetailsPlaylist(BoxLayout):
@@ -39,6 +42,7 @@ class DetailsPlaylist(BoxLayout):
                 self.ids.song_list.add_widget(label)
 
             self.ids.dl_button.disabled = False
+            self.ids.export_button.disabled = False
 
     def download_playlist(self):
         dl = SongDownloader()
@@ -51,3 +55,13 @@ class DetailsPlaylist(BoxLayout):
                 return
 
             dl.download_song(song)
+
+    def export_playlist(self):
+        if not self.playlist or not self.songs:
+            return
+
+        buffer = export_playlist(self._db, self.songs, self.playlist["author"])
+
+        Clipboard.copy(buffer)
+
+        InfoPopup("The playlist has been exported to your cilpboard.")

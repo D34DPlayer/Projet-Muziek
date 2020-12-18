@@ -4,7 +4,7 @@ from kivy.uix.dropdown import DropDown
 
 from ..database import DBMuziek
 from .utils import ErrorPopup
-from ..console_interface import create_playlist
+from ..console_interface.utils import create_playlist, import_playlist
 
 
 class PopupPlaylist(Popup):
@@ -13,6 +13,14 @@ class PopupPlaylist(Popup):
         self._db = db
 
     def submit_form(self):
+        name = self.validate_form()
+
+        if name:
+            with self._db.connection:
+                create_playlist(self._db, name)
+            self.dismiss()
+
+    def validate_form(self):
         name = self.ids.name_input.text
 
         if not name:
@@ -20,9 +28,15 @@ class PopupPlaylist(Popup):
         elif self._db.get_playlist(name):
             ErrorPopup("That playlist already exists.")
         else:
-            with self._db.connection:
-                create_playlist(self._db, name)
-            self.dismiss()
+            return name
+
+    def import_playlist(self):
+        name = self.validate_form()
+
+        if name:
+            popup = PopupImportPlaylist(self._db, name)
+            popup.bind(on_dismiss=lambda _: self.dismiss())
+            popup.open()
 
 
 class PopupAddToPlaylist(Popup):
@@ -115,3 +129,20 @@ class PlaylistButton(Button):
 def summon_popup_playlist(db: DBMuziek, dd: DropDown):
     dd.dismiss()
     PopupPlaylist(db).open()
+
+
+class PopupImportPlaylist(Popup):
+    def __init__(self, db: DBMuziek, name: str, **kwargs):
+        super(PopupImportPlaylist, self).__init__(**kwargs)
+
+        self._db = db
+        self._name = name
+
+    def submit_form(self):
+        buffer = self.ids.buffer_input.text
+
+        if not buffer:
+            ErrorPopup("No code was provided.")
+        else:
+            import_playlist(self._db, buffer, self._name)
+            self.dismiss()

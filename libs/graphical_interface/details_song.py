@@ -4,6 +4,7 @@ import subprocess
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.core.clipboard import Clipboard
 
 from .popup_song import PopupSong
 from .popup_playlist import PopupAddToPlaylist
@@ -106,9 +107,7 @@ class DetailsSong(BoxLayout):
                 explorer = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
                 subprocess.run([explorer, '/select,', path])
             else:
-                import pyperclip
-
-                pyperclip.copy(path)
+                Clipboard.copy(path)
                 InfoPopup("The path has been copied to your clipboard.")
 
     def add_to_playlist(self):

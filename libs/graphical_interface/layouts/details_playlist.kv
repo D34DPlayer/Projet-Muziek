@@ -19,6 +19,11 @@
     Element:
         spacing: 10
         Button:
+            id: export_button
+            disabled: True
+            text: "Export playlist"
+            on_release: root.export_playlist()
+        Button:
             id: dl_button
             disabled: True
             text: "Download playlist"

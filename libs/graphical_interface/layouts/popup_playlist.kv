@@ -17,6 +17,31 @@
                 text: "Cancel"
                 on_release: root.dismiss()
             Button:
+                text: "Import playlist"
+                on_release: root.import_playlist()
+            Button:
+                text: "Submit"
+                on_release: root.submit_form()
+
+<PopupImportPlaylist>:
+    title: "Import a playlist:"
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: 10
+        padding: (10, 10, 10, 10)
+        FormElement:
+            Label:
+                text: 'Code:'
+            TextInput:
+                id: buffer_input
+                focus: True
+                multiline: False
+        FormElement:
+            spacing: 10
+            Button:
+                text: "Cancel"
+                on_release: root.dismiss()
+            Button:
                 text: "Submit"
                 on_release: root.submit_form()
 
