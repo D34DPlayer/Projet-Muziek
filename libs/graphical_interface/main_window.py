@@ -163,6 +163,8 @@ class Root(BoxLayout):
     def display(self, widget, callback_create=None):
         self.ids.content.clear_widgets()
         self.ids.content.add_widget(widget)
+
+        self.ids.create.disabled = callback_create is None
         self.ids.create.on_release = callback_create
 
     def display_groups(self, page: int = 0):
