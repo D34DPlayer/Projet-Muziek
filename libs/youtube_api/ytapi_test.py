@@ -20,7 +20,8 @@ def test_parse_video_id():
         'https://www.youtube.com/watch?v=dQw4w9Wg',
         'dQw4w9WgX@Q',
         'dQw4w9WgX',
-        'dQw4w9WgXqsdl'
+        'dQw4w9WgXqsdl',
+        ''
     ]
 
     for link in valid_links:
